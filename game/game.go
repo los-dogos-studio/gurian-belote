@@ -1,0 +1,144 @@
+package game
+
+import "fmt"
+
+// NOT thread-safe
+type BeloteGame struct {
+	state          GameState
+	scores         map[TeamId]int
+	startingPlayer PlayerId
+	targetScore    int
+
+	currentHand *Hand
+	handNumber  int
+}
+
+const (
+	NUM_PLAYERS         = 4
+	NUM_CARD_PER_PLAYER = 1
+)
+
+type GameState string
+
+const (
+	GameReady      GameState = "Ready"
+	GameInProgress GameState = "InProgress"
+	GameFinished   GameState = "Finished"
+)
+
+type PlayerId int
+
+const (
+	Player1 PlayerId = iota + 1
+	Player2
+	Player3
+	Player4
+)
+
+type TeamId int
+
+const (
+	Team1 TeamId = iota + 1
+	Team2
+)
+
+func (p PlayerId) GetTeam() TeamId {
+	if p == Player1 || p == Player3 {
+		return Team1
+	}
+	return Team2
+}
+
+func NewBeloteGame(targetScore int) BeloteGame {
+	scores := make(map[TeamId]int)
+	scores[Team1] = 0
+	scores[Team2] = 0
+
+	// TODO: hand factory?
+	return BeloteGame{
+		state:          GameReady,
+		scores:         scores,
+		startingPlayer: Player1,
+		targetScore:    targetScore,
+		currentHand:    nil,
+		handNumber:     0,
+	}
+}
+
+func (gm *BeloteGame) Start() {
+	gm.state = GameInProgress
+	gm.setupHand()
+}
+
+func (gm *BeloteGame) PlayCard(player PlayerId, card Card) error {
+	if gm.state != GameInProgress {
+		return fmt.Errorf("game is not in progress")
+	}
+
+	err := gm.currentHand.PlayCard(player, card)
+	if err != nil {
+		return err
+	}
+
+	if gm.currentHand.state == HandFinished {
+		gm.handleHandEnd()
+	}
+
+	return nil
+}
+
+func (gm *BeloteGame) AcceptTableTrump(player PlayerId, accept bool) error {
+	if gm.state != GameInProgress {
+		return fmt.Errorf("game is not in progress")
+	}
+
+	return gm.currentHand.AcceptTableTrump(player, accept)
+}
+
+func (gm *BeloteGame) SelectTrump(player PlayerId, suit *Suit) error {
+	if gm.state != GameInProgress {
+		return fmt.Errorf("game is not in progress")
+	}
+
+	return gm.currentHand.SelectTrump(player, suit)
+}
+
+// TODO: return a copy?
+// TODO: decide exported functions
+func (gm *BeloteGame) GetState() GameState {
+	return gm.state
+}
+
+func (gm *BeloteGame) GetHand() *Hand {
+	return gm.currentHand
+}
+
+func (gm *BeloteGame) setupHand() {
+	gm.currentHand = NewHand(calculateHandStartingPlayer(gm.startingPlayer, gm.handNumber), NewRandomDealer())
+}
+
+func calculateHandStartingPlayer(startingPlayer PlayerId, handNumber int) PlayerId {
+	return Player1 + (startingPlayer-Player1+PlayerId(handNumber))%NUM_PLAYERS
+}
+
+func (gm *BeloteGame) handleHandEnd() {
+	gm.scores[Team1] += gm.currentHand.totals[Team1]
+	gm.scores[Team2] += gm.currentHand.totals[Team2]
+
+	if gm.checkEndCondition() {
+		gm.state = GameFinished
+		gm.currentHand = nil
+		return
+	}
+
+	gm.refreshHand()
+}
+
+func (gm *BeloteGame) refreshHand() {
+	gm.handNumber++
+	gm.setupHand()
+}
+
+func (gm *BeloteGame) checkEndCondition() bool {
+	return gm.scores[Team1] >= gm.targetScore || gm.scores[Team2] >= gm.targetScore
+}
