@@ -19,6 +19,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         source: "./"
         target: "/opt/app"
+        become: true
     
     - name: Deploy with Docker Compose
       uses: appleboy/ssh-action@master
