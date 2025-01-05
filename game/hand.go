@@ -142,6 +142,37 @@ func (h *Hand) GetPlayerCards(player PlayerId) map[Card]bool {
 	return h.playerCards[player]
 }
 
+func (h *Hand) GetTotals() map[TeamId]int {
+	return h.totals
+}
+
+func (h *Hand) GetState() HandState {
+	return h.state
+}
+
+func (h *Hand) GetTrump() Suit {
+	return h.trump
+}
+
+func (h *Hand) GetTableTrump() Card {
+	return h.tableTrumpCard
+}
+
+func (h *Hand) GetCurrentTurn() (PlayerId, error) {
+	switch h.state {
+	case TableTrumpSelection:
+		return h.getCurrentTrumpSelectionTurn(h.tableTrumpSelectionStatus)
+	case FreeTrumpSelection:
+		return h.getCurrentTrumpSelectionTurn(h.freeTrumpSelectionStatus)
+	case HandInProgress:
+		return h.currentTrick.GetCurrentTurn()
+	case HandFinished:
+		return Player1, fmt.Errorf("hand is finished")
+	default:
+		panic(fmt.Sprintf("unexpected game.HandState: %#v", h.state))
+	}
+}
+
 func (h *Hand) handleTrickResult(trickResult *TrickResult) {
 	h.totals[trickResult.winnerPlayer.GetTeam()] += trickResult.points
 
@@ -157,19 +188,28 @@ func (h *Hand) checkEndCondition() bool {
 	return len(h.playerCards[Player1]) == 0
 }
 
+func (h *Hand) getCurrentTrumpSelectionTurn(selections map[PlayerId]bool) (PlayerId, error) {
+	for i := 0; i < NUM_PLAYERS; i++ {
+		player := Player1 + (h.startingPlayer - Player1 + PlayerId(i))%NUM_PLAYERS
+		if !selections[player] {
+			return player, nil
+		}
+	}
+	return Player1, fmt.Errorf("all players have selected")
+}
+
 func (h *Hand) checkIsTrumpSelectionTurnFor(player PlayerId, selections map[PlayerId]bool) error {
 	if selections[player] {
 		return fmt.Errorf("player has already selected")
 	}
 
-	if h.startingPlayer == player {
-		return nil
+	currentPlayer, err := h.getCurrentTrumpSelectionTurn(selections) 
+	if err != nil {
+		panic(err)
 	}
 
-	fmt.Println(h.startingPlayer, player)
-	if selected := selections[(player-Player1+NUM_PLAYERS-1)%NUM_PLAYERS+Player1]; !selected {
-		fmt.Println((player-Player1+NUM_PLAYERS-1)%NUM_PLAYERS + Player1)
-		return fmt.Errorf("previous player has not selected yet")
+	if player != currentPlayer {
+		return fmt.Errorf("not player's turn")
 	}
 
 	return nil
@@ -184,7 +224,6 @@ func (h *Hand) handleTrumpSelected(trump Suit) {
 
 func (h *Hand) dealCards() {
 	for player := Player1; player <= Player4; player++ {
-		fmt.Println("Dealing cards for player", player)
 		for len(h.playerCards[player]) < NUM_CARD_PER_PLAYER {
 			cardDealt, err := h.dealer.DealCard()
 			if err != nil {
@@ -192,7 +231,6 @@ func (h *Hand) dealCards() {
 			}
 			h.playerCards[player][cardDealt] = true
 		}
-		fmt.Println("Player", player, "has cards", h.playerCards[player])
 	}
 }
 

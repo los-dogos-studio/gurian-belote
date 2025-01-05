@@ -60,7 +60,7 @@ func (t *Trick) GetTrickResult() (*TrickResult, error) {
 			if card.Suit == t.trump && card.Rank.getTrumpRankOrderIndex() > bestCard.Rank.getTrumpRankOrderIndex() {
 				bestCardOwner = player
 			}
-		} else if (card.Suit == t.trump || (card.Suit == bestCard.Suit && card.Rank.getNonTrumpRankOrderIndex() > bestCard.Rank.getNonTrumpRankOrderIndex())) {
+		} else if card.Suit == t.trump || (card.Suit == bestCard.Suit && card.Rank.getNonTrumpRankOrderIndex() > bestCard.Rank.getNonTrumpRankOrderIndex()) {
 			bestCardOwner = player
 		}
 	}

@@ -15,7 +15,7 @@ type BeloteGame struct {
 
 const (
 	NUM_PLAYERS         = 4
-	NUM_CARD_PER_PLAYER = 1
+	NUM_CARD_PER_PLAYER = 8
 )
 
 type GameState string
@@ -111,6 +111,10 @@ func (gm *BeloteGame) GetState() GameState {
 
 func (gm *BeloteGame) GetHand() *Hand {
 	return gm.currentHand
+}
+
+func (gm *BeloteGame) GetScores() map[TeamId]int {
+	return gm.scores
 }
 
 func (gm *BeloteGame) setupHand() {

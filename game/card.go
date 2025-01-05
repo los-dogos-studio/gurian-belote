@@ -24,7 +24,7 @@ const (
 	Ace   Rank = "A"
 )
 
-const NUM_CARD_VALUES = 4
+const NUM_CARD_VALUES = 8
 
 type Card struct {
 	Suit Suit
