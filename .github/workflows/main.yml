@@ -27,9 +27,8 @@ jobs:
         username: ${{ secrets.REMOTE_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          sudo chown -R $USER:$USER /opt/app
           cd /opt/app
-          docker-compose down
-          docker-compose pull
-          docker-compose up -d --build
-          docker system prune -f
+          sudo docker compose down
+          sudo docker compose pull
+          sudo docker compose up -d --build
+          sudo docker system prune -f
