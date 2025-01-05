@@ -1,0 +1,33 @@
+name: Deploy Application to EC2
+on:
+  push:
+    branches: [ main ]
+jobs:
+  deploy-to-production:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    
+    - name: Copy project files to EC2
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.REMOTE_HOST }}
+        username: ${{ secrets.REMOTE_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "./"
+        target: "/opt/app"
+    
+    - name: Deploy with Docker Compose
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.REMOTE_HOST }}
+        username: ${{ secrets.REMOTE_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          sudo chown -R $USER:$USER /opt/app
+          cd /opt/app
+          docker-compose down
+          docker-compose pull
+          docker-compose up -d --build
+          docker system prune -f
