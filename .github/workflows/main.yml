@@ -19,7 +19,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         source: "./"
         target: "/opt/app"
-        tar_exec: "/bin/tar --no-same-permissions --no-same-owner"
+        tar_exec: "/usr/bin/tar --no-same-permissions --no-same-owner"
         
     - name: Deploy with Docker Compose
       uses: appleboy/ssh-action@master
