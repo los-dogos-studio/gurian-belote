@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/los-dogos-studio/gurian-belote/cli"
 )
 
