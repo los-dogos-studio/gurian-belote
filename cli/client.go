@@ -46,7 +46,7 @@ func playStep(currentGame *game.BeloteGame) {
 
 	switch handState {
 	case game.TableTrumpSelection:
-		printGameResults(currentGame)
+		//printGameResults(currentGame)  print afterwards
 		playTableTrumpSelection(currentGame)
 	case game.FreeTrumpSelection:
 		playFreeTrumpSelection(currentGame)
@@ -90,7 +90,7 @@ func playHandInProgress(currentGame *game.BeloteGame) {
 	if err != nil {
 		panic("Invalid error received when getting current turn:" + err.Error())
 	}
-	
+
 	fmt.Println("Trump suit:", currentGame.GetHand().GetTrump())
 	printPlayerCards(currentGame.GetHand().GetPlayerCards(currentPlayer))
 	currentGame.GetHand().GetPlayerCards(currentPlayer)
@@ -101,7 +101,7 @@ func playHandInProgress(currentGame *game.BeloteGame) {
 	if err != nil {
 		fmt.Println("Invalid card played, ", err)
 	}
-	
+
 }
 
 func printGameResults(beloteGame *game.BeloteGame) {
@@ -121,4 +121,3 @@ func printPlayerCards(playerCards map[game.Card]bool) {
 	}
 	fmt.Println()
 }
-
