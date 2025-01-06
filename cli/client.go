@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/los-dogos-studio/gurian-belote/game"
 )
@@ -46,7 +47,7 @@ func playStep(currentGame *game.BeloteGame) {
 
 	switch handState {
 	case game.TableTrumpSelection:
-		//printGameResults(currentGame)  print afterwards
+		printGameResults(currentGame)
 		playTableTrumpSelection(currentGame)
 	case game.FreeTrumpSelection:
 		playFreeTrumpSelection(currentGame)
@@ -61,6 +62,8 @@ func playTableTrumpSelection(currentGame *game.BeloteGame) {
 	if err != nil {
 		panic("Invalid error received when getting current turn:" + err.Error())
 	}
+
+	printPlayerCards(currentGame.GetHand().GetPlayerCards(currentPlayer))
 
 	res := askYesNo("Do you want to accept the trump card?")
 	err = currentGame.AcceptTableTrump(currentPlayer, res)
@@ -77,11 +80,13 @@ func playFreeTrumpSelection(currentGame *game.BeloteGame) {
 		panic("Invalid error received when getting current turn:" + err.Error())
 	}
 
+	printPlayerCards(currentGame.GetHand().GetPlayerCards(currentPlayer))
+
 	res := askSkippableSuit("Do you want to choose trump suit?")
 	err = currentGame.SelectTrump(currentPlayer, res)
 
 	if err != nil {
-		fmt.Println("Please choose a valid suit")
+		fmt.Fprintln(os.Stderr, "Please choose a valid suit")
 	}
 }
 
@@ -93,15 +98,16 @@ func playHandInProgress(currentGame *game.BeloteGame) {
 
 	fmt.Println("Trump suit:", currentGame.GetHand().GetTrump())
 	printPlayerCards(currentGame.GetHand().GetPlayerCards(currentPlayer))
+	printTableCards(currentGame.GetHand().GetTrick().GetTableCards())
+
 	currentGame.GetHand().GetPlayerCards(currentPlayer)
 
 	card := askCard("Play a card")
 	err = currentGame.PlayCard(currentPlayer, card)
 
 	if err != nil {
-		fmt.Println("Invalid card played, ", err)
+		fmt.Fprintln(os.Stderr, "Invalid card played,", err)
 	}
-
 }
 
 func printGameResults(beloteGame *game.BeloteGame) {
@@ -118,6 +124,14 @@ func printPlayerCards(playerCards map[game.Card]bool) {
 		if owned {
 			fmt.Printf("%s, ", card.String())
 		}
+	}
+	fmt.Println()
+}
+
+func printTableCards(tableCards map[game.PlayerId]game.Card) {
+	fmt.Println("Table cards: ")
+	for player, card := range tableCards {
+		fmt.Printf("--- %v: %s\n", playerToString(player), card.String())
 	}
 	fmt.Println()
 }

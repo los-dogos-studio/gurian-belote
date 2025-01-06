@@ -1,0 +1,21 @@
+COPY ./client /app
+WORKDIR /app
+RUN yarn install
+
+FROM node:20-alpine AS production-dependencies-env
+COPY ./client/package.json ./client/yarn.lock /app/
+WORKDIR /app
+RUN yarn install --produtction
+
+FROM node:20-alpine AS build-env
+COPY ./client /app/
+COPY --from=development-dependencies-env /app/node_modules /app/node_modules
+WORKDIR /app
+RUN yarn build
+
+FROM node:20-alpine
+COPY ./client/package.json ./client/yarn.lock /app/
+COPY --from=production-dependencies-env /app/node_modules /app/node_modules
+COPY --from=build-env /app/dist /app/dist
+WORKDIR /app
+CMD ["yarn", "start"]

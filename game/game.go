@@ -14,8 +14,9 @@ type BeloteGame struct {
 }
 
 const (
-	NUM_PLAYERS         = 4
-	NUM_CARD_PER_PLAYER = 8
+	NUM_PLAYERS            = 4
+	NUM_CARDS_PER_PLAYER   = 8
+	NUM_CARDS_BEFORE_TRUMP = 5
 )
 
 type GameState string

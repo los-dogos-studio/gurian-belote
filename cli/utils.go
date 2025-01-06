@@ -64,7 +64,7 @@ func askCard(question string) game.Card {
 }
 
 func stringToCard(s string) (game.Card, error) {
-	rank, err := stringToRank(s[0:len(s)-1])
+	rank, err := stringToRank(s[0 : len(s)-1])
 	if err != nil {
 		return game.Card{}, err
 	}
@@ -125,4 +125,3 @@ func playerToString(player game.PlayerId) string {
 		panic("Invalid player id")
 	}
 }
-
