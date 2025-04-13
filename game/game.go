@@ -17,6 +17,7 @@ const (
 	NUM_PLAYERS            = 4
 	NUM_CARDS_PER_PLAYER   = 8
 	NUM_CARDS_BEFORE_TRUMP = 5
+	TARGET_SCORE           = 1000
 )
 
 type GameState string
@@ -50,7 +51,18 @@ func (p PlayerId) GetTeam() TeamId {
 	return Team2
 }
 
-func NewBeloteGame(targetScore int) BeloteGame {
+func (p PlayerId) GetTeammateId() PlayerId {
+	if p == Player1 {
+		return Player3
+	} else if p == Player3 {
+		return Player1
+	} else if p == Player2 {
+		return Player4
+	}
+	return Player2
+}
+
+func NewBeloteGame() BeloteGame {
 	scores := make(map[TeamId]int)
 	scores[Team1] = 0
 	scores[Team2] = 0
@@ -60,7 +72,7 @@ func NewBeloteGame(targetScore int) BeloteGame {
 		state:          GameReady,
 		scores:         scores,
 		startingPlayer: Player1,
-		targetScore:    targetScore,
+		targetScore:    TARGET_SCORE,
 		currentHand:    nil,
 		handNumber:     0,
 	}
@@ -81,7 +93,7 @@ func (gm *BeloteGame) PlayCard(player PlayerId, card Card) error {
 		return err
 	}
 
-	if gm.currentHand.state == HandFinished {
+	if gm.currentHand.State == HandFinished {
 		gm.handleHandEnd()
 	}
 
@@ -127,8 +139,8 @@ func calculateHandStartingPlayer(startingPlayer PlayerId, handNumber int) Player
 }
 
 func (gm *BeloteGame) handleHandEnd() {
-	gm.scores[Team1] += gm.currentHand.totals[Team1]
-	gm.scores[Team2] += gm.currentHand.totals[Team2]
+	gm.scores[Team1] += gm.currentHand.Totals[Team1]
+	gm.scores[Team2] += gm.currentHand.Totals[Team2]
 
 	if gm.checkEndCondition() {
 		gm.state = GameFinished

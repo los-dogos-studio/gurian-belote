@@ -3,21 +3,21 @@ package game
 import "fmt"
 
 type Trick struct {
-	startingPlayer PlayerId
-	cards          map[PlayerId]Card
-	trump          Suit
+	StartingPlayer PlayerId
+	Cards          map[PlayerId]Card
+	Trump          Suit
 }
 
 type TrickResult struct {
-	winnerPlayer PlayerId
-	points       int
+	WinnerPlayer PlayerId
+	Points       int
 }
 
 func NewTrick(startingPlayer PlayerId, trump Suit) *Trick {
 	return &Trick{
-		startingPlayer: startingPlayer,
-		cards:          make(map[PlayerId]Card, 4),
-		trump:          trump,
+		StartingPlayer: startingPlayer,
+		Cards:          make(map[PlayerId]Card, 4),
+		Trump:          trump,
 	}
 }
 
@@ -35,7 +35,7 @@ func (t *Trick) PlayCard(player PlayerId, card Card, playerCards map[Card]bool) 
 		return err
 	}
 
-	t.cards[player] = card
+	t.Cards[player] = card
 	delete(playerCards, card)
 	return nil
 }
@@ -46,21 +46,21 @@ func (t *Trick) GetTrickResult() (*TrickResult, error) {
 	}
 
 	total := 0
-	bestCardOwner := t.startingPlayer
+	bestCardOwner := t.StartingPlayer
 
-	for player, card := range t.cards {
-		if card.Suit == t.trump {
+	for player, card := range t.Cards {
+		if card.Suit == t.Trump {
 			total += card.Rank.GetTrumpPoints()
 		} else {
 			total += card.Rank.GetNonTrumpPoints()
 		}
 
-		bestCard := t.cards[bestCardOwner]
-		if bestCard.Suit == t.trump {
-			if card.Suit == t.trump && card.Rank.getTrumpRankOrderIndex() > bestCard.Rank.getTrumpRankOrderIndex() {
+		bestCard := t.Cards[bestCardOwner]
+		if bestCard.Suit == t.Trump {
+			if card.Suit == t.Trump && card.Rank.getTrumpRankOrderIndex() > bestCard.Rank.getTrumpRankOrderIndex() {
 				bestCardOwner = player
 			}
-		} else if card.Suit == t.trump || (card.Suit == bestCard.Suit && card.Rank.getNonTrumpRankOrderIndex() > bestCard.Rank.getNonTrumpRankOrderIndex()) {
+		} else if card.Suit == t.Trump || (card.Suit == bestCard.Suit && card.Rank.getNonTrumpRankOrderIndex() > bestCard.Rank.getNonTrumpRankOrderIndex()) {
 			bestCardOwner = player
 		}
 	}
@@ -70,7 +70,7 @@ func (t *Trick) GetTrickResult() (*TrickResult, error) {
 
 func (t *Trick) IsFinished() bool {
 	for _, playerId := range []PlayerId{Player1, Player2, Player3, Player4} {
-		if _, ok := t.cards[playerId]; !ok {
+		if _, ok := t.Cards[playerId]; !ok {
 			return false
 		}
 	}
@@ -82,11 +82,11 @@ func (t *Trick) GetCurrentTurn() (PlayerId, error) {
 		return Player1, fmt.Errorf("trick is finished")
 	}
 
-	return (t.startingPlayer-Player1+PlayerId(len(t.cards)))%NUM_PLAYERS + Player1, nil
+	return (t.StartingPlayer-Player1+PlayerId(len(t.Cards)))%NUM_PLAYERS + Player1, nil
 }
 
 func (t *Trick) GetTableCards() map[PlayerId]Card {
-	return t.cards
+	return t.Cards
 }
 
 func (t *Trick) validateCard(card Card, playerCards map[Card]bool) error {
@@ -94,7 +94,7 @@ func (t *Trick) validateCard(card Card, playerCards map[Card]bool) error {
 		return fmt.Errorf("player does not have this card")
 	}
 
-	if len(t.cards) == 0 {
+	if len(t.Cards) == 0 {
 		return nil
 	}
 
@@ -107,11 +107,11 @@ func (t *Trick) validateCard(card Card, playerCards map[Card]bool) error {
 		return fmt.Errorf("player must play a card of the original suit")
 	}
 
-	if !hasCardOfSuit(playerCards, t.trump) {
+	if !hasCardOfSuit(playerCards, t.Trump) {
 		return nil
 	}
 
-	if card.Suit != t.trump {
+	if card.Suit != t.Trump {
 		return fmt.Errorf("player must play a trump card")
 	}
 
@@ -125,9 +125,9 @@ func (t *Trick) validateCard(card Card, playerCards map[Card]bool) error {
 }
 
 func (t *Trick) validateHigherTrumpRule(card Card, playerCards map[Card]bool) error {
-	playersHighestTrump := getPlayersHighestTrump(playerCards, t.trump)
+	playersHighestTrump := getPlayersHighestTrump(playerCards, t.Trump)
 
-	if playersHighestTrump == nil || card.Suit != t.trump {
+	if playersHighestTrump == nil || card.Suit != t.Trump {
 		return nil
 	}
 
@@ -151,14 +151,14 @@ func hasCardOfSuit(playerCards map[Card]bool, suit Suit) bool {
 }
 
 func (t *Trick) getOriginalSuit() Suit {
-	return t.cards[t.startingPlayer].Suit
+	return t.Cards[t.StartingPlayer].Suit
 }
 
 func (t *Trick) getHighestTrumpInTrick() *Rank {
 	var highestRank *Rank = nil
 
-	for _, card := range t.cards {
-		if card.Suit != t.trump {
+	for _, card := range t.Cards {
+		if card.Suit != t.Trump {
 			continue
 		}
 

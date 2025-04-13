@@ -9,5 +9,5 @@ import (
 func main() {
 	fmt.Println("Welcome to Gurian Belote!")
 
-	cli.StartBeloteGame(200)
+	cli.StartBeloteGame()
 }

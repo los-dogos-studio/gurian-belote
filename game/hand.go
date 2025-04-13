@@ -3,18 +3,19 @@ package game
 import "fmt"
 
 type Hand struct {
-	state          HandState
-	currentTrick   *Trick
-	startingPlayer PlayerId
-	totals         map[TeamId]int
-	playerCards    map[PlayerId]map[Card]bool
-	dealer         Dealer
+	State          HandState
+	CurrentTrick   *Trick
+	StartingPlayer PlayerId
+	Totals         map[TeamId]int
+	PlayerCards    map[PlayerId]map[Card]bool
 
-	tableTrumpCard            Card
+	TableTrumpCard            Card
 	tableTrumpSelectionStatus map[PlayerId]bool
 	freeTrumpSelectionStatus  map[PlayerId]bool
 
-	trump Suit
+	Trump Suit
+
+	dealer Dealer
 }
 
 type Dealer interface {
@@ -32,21 +33,21 @@ const (
 
 func NewHand(startingPlayer PlayerId, dealer Dealer) *Hand {
 	hand := &Hand{
-		state:                     TableTrumpSelection,
-		currentTrick:              nil,
-		startingPlayer:            startingPlayer,
-		totals:                    nil,
-		playerCards:               makePlayerCards(),
+		State:                     TableTrumpSelection,
+		CurrentTrick:              nil,
+		StartingPlayer:            startingPlayer,
+		Totals:                    nil,
+		PlayerCards:               makePlayerCards(),
 		dealer:                    dealer,
-		tableTrumpCard:            Card{},
+		TableTrumpCard:            Card{},
 		tableTrumpSelectionStatus: map[PlayerId]bool{},
 		freeTrumpSelectionStatus:  map[PlayerId]bool{},
-		trump:                     Spades,
+		Trump:                     Spades,
 	}
 
-	hand.totals = map[TeamId]int{}
-	hand.totals[Team1] = 0
-	hand.totals[Team2] = 0
+	hand.Totals = map[TeamId]int{}
+	hand.Totals[Team1] = 0
+	hand.Totals[Team2] = 0
 
 	tableTrumpCard, err := dealer.DealCard()
 	if err != nil {
@@ -58,23 +59,23 @@ func NewHand(startingPlayer PlayerId, dealer Dealer) *Hand {
 		return hand
 	}
 
-	hand.tableTrumpCard = tableTrumpCard
+	hand.TableTrumpCard = tableTrumpCard
 	hand.dealInitialCards()
 
 	return hand
 }
 
 func (h *Hand) PlayCard(player PlayerId, card Card) error {
-	if h.state != HandInProgress {
+	if h.State != HandInProgress {
 		return fmt.Errorf("hand is not in progress")
 	}
 
-	if err := h.currentTrick.PlayCard(player, card, h.playerCards[player]); err != nil {
+	if err := h.CurrentTrick.PlayCard(player, card, h.PlayerCards[player]); err != nil {
 		return err
 	}
 
-	if h.currentTrick.IsFinished() {
-		trickResult, err := h.currentTrick.GetTrickResult()
+	if h.CurrentTrick.IsFinished() {
+		trickResult, err := h.CurrentTrick.GetTrickResult()
 		if err != nil {
 			panic(err)
 		}
@@ -85,8 +86,8 @@ func (h *Hand) PlayCard(player PlayerId, card Card) error {
 }
 
 func (h *Hand) AcceptTableTrump(player PlayerId, accept bool) error {
-	if h.state != TableTrumpSelection {
-		return fmt.Errorf("table trump selection is not in progress, current state: %s", h.state)
+	if h.State != TableTrumpSelection {
+		return fmt.Errorf("table trump selection is not in progress, current state: %s", h.State)
 	}
 
 	if err := h.checkIsTrumpSelectionTurnFor(player, h.tableTrumpSelectionStatus); err != nil {
@@ -94,21 +95,21 @@ func (h *Hand) AcceptTableTrump(player PlayerId, accept bool) error {
 	}
 
 	if accept {
-		h.playerCards[player][h.tableTrumpCard] = true
-		h.handleTrumpSelected(h.tableTrumpCard.Suit)
+		h.PlayerCards[player][h.TableTrumpCard] = true
+		h.handleTrumpSelected(h.TableTrumpCard.Suit)
 		return nil
 	}
 
 	h.tableTrumpSelectionStatus[player] = true
 	if len(h.tableTrumpSelectionStatus) == NUM_PLAYERS {
-		h.state = FreeTrumpSelection
+		h.State = FreeTrumpSelection
 	}
 
 	return nil
 }
 
 func (h *Hand) SelectTrump(player PlayerId, suit *Suit) error {
-	if h.state != FreeTrumpSelection {
+	if h.State != FreeTrumpSelection {
 		return fmt.Errorf("free trump selection is not in progress")
 	}
 
@@ -116,7 +117,7 @@ func (h *Hand) SelectTrump(player PlayerId, suit *Suit) error {
 		return err
 	}
 
-	if suit == &h.tableTrumpCard.Suit {
+	if suit == &h.TableTrumpCard.Suit {
 		return fmt.Errorf("trump suit cannot be the same as table trump suit")
 	}
 
@@ -125,7 +126,7 @@ func (h *Hand) SelectTrump(player PlayerId, suit *Suit) error {
 	}
 
 	if suit != nil {
-		h.playerCards[player][h.tableTrumpCard] = true
+		h.PlayerCards[player][h.TableTrumpCard] = true
 		h.handleTrumpSelected(*suit)
 		return nil
 	}
@@ -135,9 +136,9 @@ func (h *Hand) SelectTrump(player PlayerId, suit *Suit) error {
 }
 
 func (h *Hand) GetTrick() *Trick {
-	if h.state == HandInProgress {
+	if h.State == HandInProgress {
 		// TODO: copy?
-		return h.currentTrick
+		return h.CurrentTrick
 	}
 	return nil
 }
@@ -145,70 +146,70 @@ func (h *Hand) GetTrick() *Trick {
 // TODO: copy?
 // TODO: hide?
 func (h *Hand) GetPlayerCards(player PlayerId) map[Card]bool {
-	return h.playerCards[player]
+	return h.PlayerCards[player]
 }
 
 func (h *Hand) GetTotals() map[TeamId]int {
-	return h.totals
+	return h.Totals
 }
 
 func (h *Hand) GetState() HandState {
-	return h.state
+	return h.State
 }
 
 func (h *Hand) GetTrump() Suit {
-	return h.trump
+	return h.Trump
 }
 
 func (h *Hand) GetTableTrump() Card {
-	return h.tableTrumpCard
+	return h.TableTrumpCard
 }
 
 func (h *Hand) GetCurrentTurn() (PlayerId, error) {
-	switch h.state {
+	switch h.State {
 	case TableTrumpSelection:
 		return h.getCurrentTrumpSelectionTurn(h.tableTrumpSelectionStatus)
 	case FreeTrumpSelection:
 		return h.getCurrentTrumpSelectionTurn(h.freeTrumpSelectionStatus)
 	case HandInProgress:
-		return h.currentTrick.GetCurrentTurn()
+		return h.CurrentTrick.GetCurrentTurn()
 	case HandFinished:
 		return Player1, fmt.Errorf("hand is finished")
 	default:
-		panic(fmt.Sprintf("unexpected game.HandState: %#v", h.state))
+		panic(fmt.Sprintf("unexpected game.HandState: %#v", h.State))
 	}
 }
 
 func (h *Hand) dealInitialCards() {
 	for player := Player1; player <= Player4; player += 1 {
-		for len(h.playerCards[player]) < NUM_CARDS_BEFORE_TRUMP {
+		for len(h.PlayerCards[player]) < NUM_CARDS_BEFORE_TRUMP {
 			cardDealt, err := h.dealer.DealCard()
 			if err != nil {
 				panic(err)
 			}
-			h.playerCards[player][cardDealt] = true
+			h.PlayerCards[player][cardDealt] = true
 		}
 	}
 }
 
 func (h *Hand) handleTrickResult(trickResult *TrickResult) {
-	h.totals[trickResult.winnerPlayer.GetTeam()] += trickResult.points
+	h.Totals[trickResult.WinnerPlayer.GetTeam()] += trickResult.Points
 
 	if h.checkEndCondition() {
-		h.state = HandFinished
+		h.State = HandFinished
 		return
 	}
 
-	h.currentTrick = NewTrick(trickResult.winnerPlayer, h.trump)
+	h.CurrentTrick = NewTrick(trickResult.WinnerPlayer, h.Trump)
 }
 
 func (h *Hand) checkEndCondition() bool {
-	return len(h.playerCards[Player1]) == 0
+	return len(h.PlayerCards[Player1]) == 0
 }
 
 func (h *Hand) getCurrentTrumpSelectionTurn(selections map[PlayerId]bool) (PlayerId, error) {
 	for i := 0; i < NUM_PLAYERS; i++ {
-		player := Player1 + (h.startingPlayer-Player1+PlayerId(i))%NUM_PLAYERS
+		player := Player1 + (h.StartingPlayer-Player1+PlayerId(i))%NUM_PLAYERS
 		if !selections[player] {
 			return player, nil
 		}
@@ -234,20 +235,20 @@ func (h *Hand) checkIsTrumpSelectionTurnFor(player PlayerId, selections map[Play
 }
 
 func (h *Hand) handleTrumpSelected(trump Suit) {
-	h.trump = trump
-	h.state = HandInProgress
-	h.currentTrick = NewTrick(h.startingPlayer, h.trump)
+	h.Trump = trump
+	h.State = HandInProgress
+	h.CurrentTrick = NewTrick(h.StartingPlayer, h.Trump)
 	h.dealCards()
 }
 
 func (h *Hand) dealCards() {
 	for player := Player1; player <= Player4; player++ {
-		for len(h.playerCards[player]) < NUM_CARDS_PER_PLAYER {
+		for len(h.PlayerCards[player]) < NUM_CARDS_PER_PLAYER {
 			cardDealt, err := h.dealer.DealCard()
 			if err != nil {
 				panic(err)
 			}
-			h.playerCards[player][cardDealt] = true
+			h.PlayerCards[player][cardDealt] = true
 		}
 	}
 }
@@ -261,5 +262,5 @@ func makePlayerCards() map[PlayerId]map[Card]bool {
 }
 
 func (h *Hand) getLastPlayer() PlayerId {
-	return Player1 + (h.startingPlayer-Player1+NUM_PLAYERS-1)%NUM_PLAYERS
+	return Player1 + (h.StartingPlayer-Player1+NUM_PLAYERS-1)%NUM_PLAYERS
 }
