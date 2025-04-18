@@ -9,7 +9,8 @@ import (
 )
 
 type SelectTrumpCmd struct {
-	Trump game.Suit
+	Command string
+	Trump   game.Suit
 }
 
 type SelectTrumpCmdParser struct{}
@@ -19,7 +20,10 @@ func (p *SelectTrumpCmdParser) GetFormat() string {
 }
 
 func (p *SelectTrumpCmdParser) FromInput(input string) (CliCmd, error) {
-	cmd := &SelectTrumpCmd{}
+	cmd := &SelectTrumpCmd{
+		Command: "selectTrump",
+		Trump:   "",
+	}
 	_, err := fmt.Sscanf(input, p.GetFormat(), &cmd.Trump)
 	if err != nil {
 		return nil, err

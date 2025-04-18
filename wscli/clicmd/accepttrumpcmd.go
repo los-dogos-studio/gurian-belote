@@ -8,6 +8,7 @@ import (
 )
 
 type AcceptTrumpCmd struct {
+	Command  string
 	Accepted bool
 }
 
@@ -19,6 +20,7 @@ func (p *AcceptTrumpCmdParser) GetFormat() string {
 
 func (p *AcceptTrumpCmdParser) FromInput(input string) (CliCmd, error) {
 	cmd := &AcceptTrumpCmd{
+		Command:  "acceptTrump",
 		Accepted: false,
 	}
 	_, err := fmt.Sscanf(input, p.GetFormat(), &cmd.Accepted)

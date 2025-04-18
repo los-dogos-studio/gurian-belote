@@ -9,7 +9,8 @@ import (
 )
 
 type PlayCardCmd struct {
-	Card game.Card
+	Command string
+	Card    game.Card
 }
 
 type PlayCardCmdParser struct{}
@@ -20,7 +21,10 @@ func (p *PlayCardCmdParser) GetFormat() string {
 
 func (p *PlayCardCmdParser) FromInput(input string) (CliCmd, error) {
 	// TODO: check if validation is needed
-	playCardCmd := PlayCardCmd{}
+	playCardCmd := PlayCardCmd{
+		Command: "playCard",
+		Card:    game.Card{},
+	}
 	_, err := fmt.Sscanf(input, p.GetFormat(), &playCardCmd.Card.Suit, &playCardCmd.Card.Rank)
 	if err != nil {
 		return nil, err

@@ -1,7 +1,9 @@
 package clicmd
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -29,8 +31,9 @@ var AvailableParsers []CliCmdParser = []CliCmdParser{
 }
 
 func ReadCommand() (CliCmd, error) {
-	var command string
-	_, err := fmt.Scanln(&command)
+	scanner := bufio.NewReader(os.Stdin)
+	command, err := scanner.ReadString('\n')
+
 	if err != nil {
 		return nil, err
 	}
