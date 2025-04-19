@@ -10,7 +10,7 @@ import (
 
 type SelectTrumpCmd struct {
 	Command string
-	Trump   game.Suit
+	Trump   *game.Suit
 }
 
 type SelectTrumpCmdParser struct{}
@@ -20,15 +20,28 @@ func (p *SelectTrumpCmdParser) GetFormat() string {
 }
 
 func (p *SelectTrumpCmdParser) FromInput(input string) (CliCmd, error) {
-	cmd := &SelectTrumpCmd{
-		Command: "selectTrump",
-		Trump:   "",
-	}
-	_, err := fmt.Sscanf(input, p.GetFormat(), &cmd.Trump)
+	trumpInput := ""
+	_, err := fmt.Sscanf(input, p.GetFormat(), &trumpInput)
 	if err != nil {
 		return nil, err
 	}
-	return cmd, nil
+
+	cmd := &SelectTrumpCmd{
+		Command: "selectTrump",
+		Trump:   nil,
+	}
+
+	switch trumpInput {
+	case string(game.Spades), string(game.Hearts), string(game.Diamonds), string(game.Clubs):
+		suit := game.Suit(trumpInput)
+		cmd.Trump = &suit
+		return cmd, nil
+	case "none":
+		cmd.Trump = nil
+		return cmd, nil
+	default:
+		return nil, fmt.Errorf("invalid trump suit")
+	}
 }
 
 func (cmd *SelectTrumpCmd) ToWsMsg() (string, error) {

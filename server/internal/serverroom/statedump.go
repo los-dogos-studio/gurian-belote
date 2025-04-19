@@ -11,17 +11,64 @@ type GameState string
 
 type TrickDump struct {
 	PlayedCards    map[game.PlayerId]game.Card
-	TrumpSuit      game.Suit
 	StartingPlayer game.PlayerId
+}
+
+type HandDump interface {
+	GetState() game.HandState
+	GetStartingPlayer() game.PlayerId
+}
+
+type TableTrumpSelectionHandDump struct {
+	State           game.HandState
+	TableTrumpCard  game.Card
+	SelectionStatus map[game.PlayerId]bool
+	StartingPlayer  game.PlayerId
+}
+
+func (d *TableTrumpSelectionHandDump) GetState() game.HandState {
+	return d.State
+}
+
+func (d *TableTrumpSelectionHandDump) GetStartingPlayer() game.PlayerId {
+	return d.StartingPlayer
+}
+
+type FreeTrumpSelectionHandDump struct {
+	State           game.HandState
+	TableTrumpCard  game.Card
+	SelectionStatus map[game.PlayerId]bool
+	StartingPlayer  game.PlayerId
+}
+
+func (d *FreeTrumpSelectionHandDump) GetState() game.HandState {
+	return d.State
+}
+
+func (d *FreeTrumpSelectionHandDump) GetStartingPlayer() game.PlayerId {
+	return d.StartingPlayer
+}
+
+type InProgressHandDump struct {
+	State  game.HandState
+	Trump  game.Suit
+	Trick  TrickDump
+	Totals map[game.TeamId]int
+}
+
+func (d *InProgressHandDump) GetState() game.HandState {
+	return d.State
+}
+
+func (d *InProgressHandDump) GetStartingPlayer() game.PlayerId {
+	return d.Trick.StartingPlayer
 }
 
 type StateDump struct {
 	RoomId         string
 	Players        map[game.PlayerId]string
 	Teams          map[game.TeamId][]string
-	Trick          *TrickDump
-	StartingPlayer *game.PlayerId
-	HandState      game.HandState
+	Hand           HandDump
 	GameState      game.GameState
 	Scores         map[game.TeamId]int
 }
@@ -42,9 +89,7 @@ func DumpState(room *Room) StateDump {
 		RoomId:         room.Id,
 		Players:        dumpPlayersMap(room),
 		Teams:          dumpTeams(room),
-		Trick:          dumpTrick(room),
-		StartingPlayer: dumpStartingPlayer(room),
-		HandState:      dumpHandState(room),
+		Hand:           dumpHand(room),
 		GameState:      dumpGameState(room),
 		Scores:         dumpScore(room),
 	}
@@ -108,32 +153,62 @@ func dumpTeams(room *Room) map[game.TeamId][]string {
 	return teams
 }
 
-func dumpTrick(room *Room) *TrickDump {
+func dumpHand(room *Room) HandDump {
 	hand := room.Game.GetHand()
 	if hand == nil {
 		return nil
 	}
 
-	trick := room.Game.GetHand().GetTrick()
+	switch hand.GetState() {
+	case game.TableTrumpSelection:
+		return dumpTableTrumpSelectionHand(hand)
+	case game.FreeTrumpSelection:
+		return dumpFreeTrumpSelectionHand(hand)
+	case game.HandInProgress:
+		return dumpInProgressHand(hand)
+	case game.HandFinished:
+		return nil
+	}
+	return nil
+}
+
+func dumpTableTrumpSelectionHand(hand *game.Hand) *TableTrumpSelectionHandDump {
+	return &TableTrumpSelectionHandDump{
+		State:           hand.GetState(),
+		TableTrumpCard:  hand.TableTrumpCard,
+		SelectionStatus: hand.TableTrumpSelectionStatus,
+		StartingPlayer:  hand.StartingPlayer,
+	}
+}
+
+func dumpFreeTrumpSelectionHand(hand *game.Hand) *FreeTrumpSelectionHandDump {
+	return &FreeTrumpSelectionHandDump{
+		State:           hand.GetState(),
+		TableTrumpCard:  hand.TableTrumpCard,
+		SelectionStatus: hand.FreeTrumpSelectionStatus,
+		StartingPlayer:  hand.StartingPlayer,
+	}
+}
+
+func dumpInProgressHand(hand *game.Hand) *InProgressHandDump {
+	trick := hand.GetTrick()
 	if trick == nil {
 		return nil
 	}
 
-	return &TrickDump{
-		PlayedCards:    trick.GetTableCards(),
-		TrumpSuit:      hand.GetTrump(),
-		StartingPlayer: trick.StartingPlayer,
+	return &InProgressHandDump{
+		State:  hand.GetState(),
+		Trump:  hand.GetTrump(),
+		Trick:  dumpTrick(trick),
+		Totals: hand.Totals,
 	}
 }
 
-func dumpStartingPlayer(room *Room) *game.PlayerId {
-	hand := room.Game.GetHand()
-	if hand == nil {
-		return nil
+func dumpTrick(trick *game.Trick) TrickDump {
+	return TrickDump{
+		PlayedCards:    trick.GetTableCards(),
+		StartingPlayer: trick.StartingPlayer,
 	}
-
-	startingPlayer := hand.StartingPlayer
-	return &startingPlayer
 }
 
 func dumpHandState(room *Room) game.HandState {

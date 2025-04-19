@@ -10,8 +10,8 @@ type Hand struct {
 	PlayerCards    map[PlayerId]map[Card]bool
 
 	TableTrumpCard            Card
-	tableTrumpSelectionStatus map[PlayerId]bool
-	freeTrumpSelectionStatus  map[PlayerId]bool
+	TableTrumpSelectionStatus map[PlayerId]bool
+	FreeTrumpSelectionStatus  map[PlayerId]bool
 
 	Trump Suit
 
@@ -40,8 +40,8 @@ func NewHand(startingPlayer PlayerId, dealer Dealer) *Hand {
 		PlayerCards:               makePlayerCards(),
 		dealer:                    dealer,
 		TableTrumpCard:            Card{},
-		tableTrumpSelectionStatus: map[PlayerId]bool{},
-		freeTrumpSelectionStatus:  map[PlayerId]bool{},
+		TableTrumpSelectionStatus: map[PlayerId]bool{},
+		FreeTrumpSelectionStatus:  map[PlayerId]bool{},
 		Trump:                     Spades,
 	}
 
@@ -90,7 +90,7 @@ func (h *Hand) AcceptTableTrump(player PlayerId, accept bool) error {
 		return fmt.Errorf("table trump selection is not in progress, current state: %s", h.State)
 	}
 
-	if err := h.checkIsTrumpSelectionTurnFor(player, h.tableTrumpSelectionStatus); err != nil {
+	if err := h.checkIsTrumpSelectionTurnFor(player, h.TableTrumpSelectionStatus); err != nil {
 		return err
 	}
 
@@ -100,8 +100,8 @@ func (h *Hand) AcceptTableTrump(player PlayerId, accept bool) error {
 		return nil
 	}
 
-	h.tableTrumpSelectionStatus[player] = true
-	if len(h.tableTrumpSelectionStatus) == NUM_PLAYERS {
+	h.TableTrumpSelectionStatus[player] = true
+	if len(h.TableTrumpSelectionStatus) == NUM_PLAYERS {
 		h.State = FreeTrumpSelection
 	}
 
@@ -113,11 +113,11 @@ func (h *Hand) SelectTrump(player PlayerId, suit *Suit) error {
 		return fmt.Errorf("free trump selection is not in progress")
 	}
 
-	if err := h.checkIsTrumpSelectionTurnFor(player, h.freeTrumpSelectionStatus); err != nil {
+	if err := h.checkIsTrumpSelectionTurnFor(player, h.FreeTrumpSelectionStatus); err != nil {
 		return err
 	}
 
-	if suit == &h.TableTrumpCard.Suit {
+	if *suit == h.TableTrumpCard.Suit {
 		return fmt.Errorf("trump suit cannot be the same as table trump suit")
 	}
 
@@ -131,7 +131,7 @@ func (h *Hand) SelectTrump(player PlayerId, suit *Suit) error {
 		return nil
 	}
 
-	h.freeTrumpSelectionStatus[player] = true
+	h.FreeTrumpSelectionStatus[player] = true
 	return nil
 }
 
@@ -168,9 +168,9 @@ func (h *Hand) GetTableTrump() Card {
 func (h *Hand) GetCurrentTurn() (PlayerId, error) {
 	switch h.State {
 	case TableTrumpSelection:
-		return h.getCurrentTrumpSelectionTurn(h.tableTrumpSelectionStatus)
+		return h.getCurrentTrumpSelectionTurn(h.TableTrumpSelectionStatus)
 	case FreeTrumpSelection:
-		return h.getCurrentTrumpSelectionTurn(h.freeTrumpSelectionStatus)
+		return h.getCurrentTrumpSelectionTurn(h.FreeTrumpSelectionStatus)
 	case HandInProgress:
 		return h.CurrentTrick.GetCurrentTurn()
 	case HandFinished:
