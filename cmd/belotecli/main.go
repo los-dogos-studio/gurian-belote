@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/los-dogos-studio/gurian-belote/cli"
+	cli "github.com/los-dogos-studio/gurian-belote/gamecli"
 )
 
 func main() {
