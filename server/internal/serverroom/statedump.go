@@ -10,8 +10,8 @@ import (
 type GameState string
 
 type TrickDump struct {
-	PlayedCards    map[game.PlayerId]game.Card
-	StartingPlayer game.PlayerId
+	PlayedCards    map[game.PlayerId]game.Card `json:"playedCards"`
+	StartingPlayer game.PlayerId               `json:"startingPlayer"`
 }
 
 type HandDump interface {
@@ -20,10 +20,10 @@ type HandDump interface {
 }
 
 type TableTrumpSelectionHandDump struct {
-	State           game.HandState
-	TableTrumpCard  game.Card
-	SelectionStatus map[game.PlayerId]bool
-	StartingPlayer  game.PlayerId
+	State           game.HandState         `json:"state"`
+	TableTrumpCard  game.Card              `json:"tableTrumpCard"`
+	SelectionStatus map[game.PlayerId]bool `json:"selectionStatus"`
+	StartingPlayer  game.PlayerId          `json:"startingPlayer"`
 }
 
 func (d *TableTrumpSelectionHandDump) GetState() game.HandState {
@@ -35,10 +35,10 @@ func (d *TableTrumpSelectionHandDump) GetStartingPlayer() game.PlayerId {
 }
 
 type FreeTrumpSelectionHandDump struct {
-	State           game.HandState
-	TableTrumpCard  game.Card
-	SelectionStatus map[game.PlayerId]bool
-	StartingPlayer  game.PlayerId
+	State           game.HandState         `json:"state"`
+	TableTrumpCard  game.Card              `json:"tableTrumpCard"`
+	SelectionStatus map[game.PlayerId]bool `json:"selectionStatus"`
+	StartingPlayer  game.PlayerId          `json:"startingPlayer"`
 }
 
 func (d *FreeTrumpSelectionHandDump) GetState() game.HandState {
@@ -50,10 +50,10 @@ func (d *FreeTrumpSelectionHandDump) GetStartingPlayer() game.PlayerId {
 }
 
 type InProgressHandDump struct {
-	State  game.HandState
-	Trump  game.Suit
-	Trick  TrickDump
-	Totals map[game.TeamId]int
+	State  game.HandState      `json:"state"`
+	Trump  game.Suit           `json:"trump"`
+	Trick  TrickDump           `json:"trick"`
+	Totals map[game.TeamId]int `json:"totals"`
 }
 
 func (d *InProgressHandDump) GetState() game.HandState {
@@ -65,19 +65,19 @@ func (d *InProgressHandDump) GetStartingPlayer() game.PlayerId {
 }
 
 type StateDump struct {
-	RoomId         string
-	Players        map[game.PlayerId]string
-	Teams          map[game.TeamId][]string
-	Hand           HandDump
-	GameState      game.GameState
-	Scores         map[game.TeamId]int
+	RoomId    string                   `json:"roomId"`
+	Players   map[game.PlayerId]string `json:"players"`
+	Teams     map[game.TeamId][]string `json:"teams"`
+	Hand      HandDump                 `json:"hand"`
+	GameState game.GameState           `json:"gameState"`
+	Scores    map[game.TeamId]int      `json:"scores"`
 }
 
 type UserStateDump struct {
-	GameState StateDump
-	UserId    string
-	PlayerId  game.PlayerId
-	UserCards []game.Card
+	GameState StateDump     `json:"gameState"`
+	UserId    string        `json:"userId"`
+	PlayerId  game.PlayerId `json:"playerId"`
+	UserCards []game.Card   `json:"userCards"`
 }
 
 var (
@@ -86,12 +86,12 @@ var (
 
 func DumpState(room *Room) StateDump {
 	return StateDump{
-		RoomId:         room.Id,
-		Players:        dumpPlayersMap(room),
-		Teams:          dumpTeams(room),
-		Hand:           dumpHand(room),
-		GameState:      dumpGameState(room),
-		Scores:         dumpScore(room),
+		RoomId:    room.Id,
+		Players:   dumpPlayersMap(room),
+		Teams:     dumpTeams(room),
+		Hand:      dumpHand(room),
+		GameState: dumpGameState(room),
+		Scores:    dumpScore(room),
 	}
 }
 

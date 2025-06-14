@@ -27,8 +27,8 @@ const (
 const NUM_CARD_VALUES = 8
 
 type Card struct {
-	Suit Suit
-	Rank Rank
+	Suit Suit `json:"suit"`
+	Rank Rank `json:"rank"`
 }
 
 func (c *Card) String() string {
