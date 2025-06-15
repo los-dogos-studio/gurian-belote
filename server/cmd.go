@@ -72,7 +72,7 @@ func (s *Server) handleCommand(user *User, content json.RawMessage) error {
 		}
 
 		user.RoomId = userRoom.Id
-		user.ws.WriteMessage(1, []byte(userRoom.Id))
+		// user.ws.WriteMessage(1, []byte(userRoom.Id))
 		return nil
 
 	case JoinRoom:

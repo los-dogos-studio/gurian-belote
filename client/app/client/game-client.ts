@@ -1,9 +1,13 @@
 import NewRoomCommand from './command/new-room';
 import JoinRoomCommand from './command/join-room';
+import { plainToInstance } from 'class-transformer';
+import { validateOrReject } from 'class-validator';
+import { State } from './state/state';
 
 export class GameClient {
 	private ws: WebSocket | null = null;
 	private wsUrl: string;
+	private listeners: ((state: State) => void)[] = [];
 
 	constructor(wsUrl: string) {
 		this.wsUrl = wsUrl;
@@ -29,8 +33,14 @@ export class GameClient {
 			};
 
 			this.ws.onmessage = (event) => {
-				const message = JSON.parse(event.data);
-				console.log('Received message:', message);
+				if (!event.data) {
+					console.warn('Received empty message from WebSocket');
+					return;
+				}
+
+				const message = plainToInstance(State, JSON.parse(event.data) as State);
+				validateOrReject(message);
+				this.listeners.forEach(listener => listener(message));
 			};
 		});
 	}
@@ -58,6 +68,10 @@ export class GameClient {
 
 		const command = new NewRoomCommand();
 		this.ws.send(JSON.stringify(command));
+	}
+
+	public addListener(listener: (state: State) => void): void {
+		this.listeners.push(listener);
 	}
 }
 

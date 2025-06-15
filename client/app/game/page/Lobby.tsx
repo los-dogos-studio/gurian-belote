@@ -1,15 +1,23 @@
 import { useState } from 'react';
+import { useGameClient } from '../GameClientContext'
 
 const Lobby = () => {
 	const [userId, setUserId] = useState('');
 	const [roomId, setRoomId] = useState('');
+	const client = useGameClient();
 
 	const handleJoinRoom = () => {
-		console.log(`User ${userId} is joining room ${roomId}`);
+		console.log('Joining room:', roomId, 'as user:', userId);
+		client.connect(userId).then(() => {
+			client.joinRoom(roomId);
+		});
 	};
 
 	const handleCreateRoom = () => {
-		console.log(`User ${userId} is creating a new room`);
+		console.log('Creating room as user:', userId);
+		client.connect(userId).then(() => {
+			client.createRoom();
+		});
 	};
 
 	return (
@@ -20,9 +28,7 @@ const Lobby = () => {
 				</h1>
 
 				<div className="mb-6">
-					<label className="block text-sm font-medium text-gold-200 mb-1">
-						🎲 User ID
-					</label>
+					<label className="block text-sm font-medium text-gold-200 mb-1">🎲 User ID</label>
 					<input
 						type="text"
 						className="w-full px-4 py-2 bg-[#2c1a1a] border border-gold-500 rounded-lg text-white placeholder:text-gold-300 focus:outline-none focus:ring-2 focus:ring-gold-400"
@@ -33,9 +39,7 @@ const Lobby = () => {
 				</div>
 
 				<div className="mb-6">
-					<label className="block text-sm font-medium text-gold-200 mb-1">
-						🃏 Room ID
-					</label>
+					<label className="block text-sm font-medium text-gold-200 mb-1">🃏 Room ID</label>
 					<input
 						type="text"
 						className="w-full px-4 py-2 bg-[#2c1a1a] border border-gold-500 rounded-lg text-white placeholder:text-gold-300 focus:outline-none focus:ring-2 focus:ring-gold-400"
