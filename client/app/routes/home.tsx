@@ -1,4 +1,4 @@
-import BeloteApp from "~/game/BeloteApp";
+import BeloteApp from "~/components/game/BeloteApp";
 import type { Route } from "./+types/home";
 
 export function meta({ }: Route.MetaArgs) {

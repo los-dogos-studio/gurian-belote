@@ -16,18 +16,6 @@ export default {
           '"Noto Color Emoji"',
         ],
       },
-      colors: {
-        gold: {
-          100: '#f9f3e8',
-          200: '#f6e7c6',
-          400: '#e3c675',
-          500: '#cfa93f',
-          600: '#b2892e',
-        },
-      },
-      dropShadow: {
-        glow: '0 0 8px #e3c675',
-      },
     },
   },
   plugins: [],

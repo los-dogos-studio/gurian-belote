@@ -2,8 +2,8 @@ import { GameStage } from "~/client/state/game-state";
 import { useGameState } from "./GameStateContext";
 import GameOver from "./page/GameOver";
 import InGame from "./page/InGame";
-import Lobby from "./page/Lobby";
-import WaitingRoom from "./page/WaitingRoom";
+import Lobby from './page/Lobby';
+import TeamSelection from "./page/TeamSelection";
 
 export const GamePageDispatcher = () => {
 	const { gameState } = useGameState();
@@ -14,7 +14,7 @@ export const GamePageDispatcher = () => {
 
 	switch (gameState.gameState.gameState) {
 		case GameStage.GameReady:
-			return <WaitingRoom />
+			return <TeamSelection />
 		case GameStage.GameInProgress:
 			return <InGame />
 		case GameStage.GameFinished:
