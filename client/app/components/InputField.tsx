@@ -7,12 +7,13 @@ interface InputFieldProps {
 	placeholder: string;
 	error?: string;
 	disabled?: boolean;
+	isAlphaNumeric?: boolean;
 }
 
-const InputField: FC<InputFieldProps> = ({ label, value, onChange, placeholder, error, disabled = false }) => {
+const InputField: FC<InputFieldProps> = ({ label, value, onChange, placeholder, error, disabled = false, isAlphaNumeric = true }) => {
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const inputValue = e.target.value;
-		if (/^[a-zA-Z0-9]*$/.test(inputValue)) {
+		if (!isAlphaNumeric || /^[a-zA-Z0-9]*$/.test(inputValue)) {
 			onChange(inputValue);
 		}
 	};

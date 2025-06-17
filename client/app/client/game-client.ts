@@ -5,6 +5,12 @@ import { validateOrReject } from 'class-validator';
 import { State } from './state/state';
 import ChooseTeamCommand from './command/choose-team';
 import { TeamId } from './team-id';
+import StartGameCommand from './command/start-game';
+import PlayCardMove from './command/move/play-card';
+import type { Card, Rank } from './card';
+import PlayTurnCommand from './command/play-turn';
+import AcceptTrumpMove from './command/move/accept-trump';
+import SelectTrumpMove from './command/move/select-trump';
 
 export class GameClient {
 	private ws: WebSocket | null = null;
@@ -76,7 +82,6 @@ export class GameClient {
 		this.ws.send(JSON.stringify(command));
 	}
 
-
 	public createRoom(): void {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
 			throw new Error('WebSocket is not connected.');
@@ -87,8 +92,44 @@ export class GameClient {
 	}
 
 	public startGame(): void {
-		throw new Error('Not implemented yet.');
+		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+			throw new Error('WebSocket is not connected.');
+		}
+
+		const command = new StartGameCommand();
+		this.ws.send(JSON.stringify(command));
 	}
+
+	public playCard(card: Card): void {
+		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+			throw new Error('WebSocket is not connected.');
+		}
+
+		const move = new PlayCardMove(card);
+		const command = new PlayTurnCommand(move);
+		this.ws.send(JSON.stringify(command));
+	}
+
+	public acceptTrump(accepted: boolean): void {
+		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+			throw new Error('WebSocket is not connected.');
+		}
+
+		const move = new AcceptTrumpMove(accepted);
+		const command = new PlayTurnCommand(move);
+		this.ws.send(JSON.stringify(command));
+	}
+
+	public selectTrump(rank: Rank | null): void {
+		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+			throw new Error('WebSocket is not connected.');
+		}
+
+		const move = new SelectTrumpMove(rank);
+		const command = new PlayTurnCommand(move);
+		this.ws.send(JSON.stringify(command));
+	}
+
 
 	public addListener(listener: (state: State) => void): void {
 		this.listeners.push(listener);
