@@ -7,11 +7,11 @@ import (
 	"github.com/los-dogos-studio/gurian-belote/game"
 )
 
-func StartBeloteGame(targetScore int) {
+func StartBeloteGame() {
 	fmt.Println("Starting Belote game")
 
 	for {
-		currentGame := game.NewBeloteGame(targetScore)
+		currentGame := game.NewBeloteGame()
 		playGame(&currentGame)
 		if !askYesNo("Do you want to play again?") {
 			break
