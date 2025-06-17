@@ -3,8 +3,9 @@ import { Suit, type Card } from "../card";
 import { PlayerId } from "../player-id";
 import type { TeamId } from "../team-id";
 import type { Trick } from "./trick";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import "reflect-metadata";
+import { stringMapToIntEnumMap } from "./enum-map-utils";
 
 export enum HandState {
 	TableTrumpSelection = "TableTrumpSelection",
@@ -26,21 +27,25 @@ export class Hand {
 	startingPlayer?: PlayerId;
 
 	@ValidateNested()
+	@Transform(stringMapToIntEnumMap)
 	@Type(() => Map<TeamId, Number>)
 	totals: Map<TeamId, number>;
 
 	@ValidateNested()
-	@Type(() => Map<Card, Boolean>)
+	@Transform(stringMapToIntEnumMap)
+	@Type(() => Map<PlayerId, Map<Card, boolean>>)
 	playerCards: Map<PlayerId, Map<Card, boolean>>;
 
 	@ValidateNested()
 	tableTrumpCard: Card;
 
 	@ValidateNested()
+	@Transform(stringMapToIntEnumMap)
 	@Type(() => Map<PlayerId, Boolean>)
 	tableTrumpSelectionStatus: Map<PlayerId, boolean>;
 
 	@ValidateNested()
+	@Transform(stringMapToIntEnumMap)
 	@Type(() => Map<PlayerId, Boolean>)
 	freeTrumpSelectionStatus: Map<PlayerId, boolean>;
 

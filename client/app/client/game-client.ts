@@ -3,6 +3,8 @@ import JoinRoomCommand from './command/join-room';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { State } from './state/state';
+import ChooseTeamCommand from './command/choose-team';
+import { TeamId } from './team-id';
 
 export class GameClient {
 	private ws: WebSocket | null = null;
@@ -61,6 +63,20 @@ export class GameClient {
 		this.ws.send(JSON.stringify(command));
 	}
 
+	public chooseTeam(teamId: TeamId): void {
+		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+			throw new Error('WebSocket is not connected.');
+		}
+
+		if (teamId === TeamId.NoTeam) {
+			throw new Error('Cannot choose NoTeam.');
+		}
+
+		const command = new ChooseTeamCommand(teamId);
+		this.ws.send(JSON.stringify(command));
+	}
+
+
 	public createRoom(): void {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
 			throw new Error('WebSocket is not connected.');
@@ -68,6 +84,10 @@ export class GameClient {
 
 		const command = new NewRoomCommand();
 		this.ws.send(JSON.stringify(command));
+	}
+
+	public startGame(): void {
+		throw new Error('Not implemented yet.');
 	}
 
 	public addListener(listener: (state: State) => void): void {

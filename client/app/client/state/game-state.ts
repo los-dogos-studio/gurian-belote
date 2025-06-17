@@ -1,9 +1,10 @@
-import { IsEnum, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsEnum, IsOptional, IsString, ValidateNested } from "class-validator";
 import type { PlayerId } from "../player-id";
 import type { TeamId } from "../team-id";
-import { Hand } from "./hand";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import 'reflect-metadata';
+import { Hand } from "./hand";
+import { stringMapToIntEnumMap } from "./enum-map-utils";
 
 export enum GameStage {
 	GameReady = "Ready",
@@ -16,11 +17,11 @@ export class GameState {
 	roomId: string;
 
 	@Type(() => Map<PlayerId, string>)
-	@ValidateNested()
+	@Transform(stringMapToIntEnumMap)
 	players: Map<PlayerId, string>;
 
 	@Type(() => Map<TeamId, string[]>)
-	@ValidateNested()
+	@Transform(stringMapToIntEnumMap)
 	teams: Map<TeamId, string[]>;
 
 	@Type(() => Hand)
@@ -32,7 +33,7 @@ export class GameState {
 	gameState: GameStage;
 
 	@Type(() => Map<TeamId, number>)
-	@ValidateNested()
+	@Transform(stringMapToIntEnumMap)
 	scores: Map<TeamId, number>;
 
 	constructor(
