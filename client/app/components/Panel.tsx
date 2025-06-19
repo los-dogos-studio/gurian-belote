@@ -4,7 +4,7 @@ export const Panel: React.FC<{
 }> = ({ children, className }) => {
 	return (
 		<div
-			className={`bg-black/70 backdrop-blur-sm rounded-2xl shadow-2xl p-8 max-w-md w-full ${className}`}
+			className={`bg-black/70 backdrop-blur-sm rounded-2xl shadow-2xl p-2 ${className}`}
 		>
 			{children}
 		</div>

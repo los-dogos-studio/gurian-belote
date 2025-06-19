@@ -67,7 +67,7 @@ export const TeamSelection = () => {
 	}
 
 	return (
-		<Panel>
+		<Panel className="max-w-md w-full border border-yellow-600/30 rounded-2xl p-8">
 			<Title />
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl mx-auto mb-6">
 				<TeamColumn

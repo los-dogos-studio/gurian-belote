@@ -32,7 +32,7 @@ const Lobby = () => {
 	}
 
 	return (
-		<Panel className="border border-yellow-600/30 rounded-2xl p-8">
+		<Panel className="max-w-md w-full border border-yellow-600/30 rounded-2xl p-8">
 			<Title />
 			<InputField
 				label={'Player Name'}
