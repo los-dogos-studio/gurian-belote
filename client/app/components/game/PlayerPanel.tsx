@@ -112,7 +112,7 @@ const PlayerCardsPanel = ({ cards }: PlayerCardsPanelProps) => {
 	return (
 		<div className="flex justify-center items-center -space-x-4">
 			{cards.map((card, index) => (
-				<CardFace key={index} card={card} />
+				<CardFace key={index} card={card} hover />
 			))}
 		</div>
 	);
