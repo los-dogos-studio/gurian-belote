@@ -5,6 +5,7 @@ import { Rank, Suit, type Card } from "~/client/card";
 import PlayerPanel from "../PlayerPanel";
 import { LuUser } from "react-icons/lu";
 import CardFace from "../CardFace";
+import { getNextPlayerId, type PlayerId } from "~/client/player-id";
 
 const scores = {
 	"You": 0,
@@ -52,6 +53,9 @@ export const InGame = () => {
 	const { gameState } = useGameState();
 	const gameClient = useGameClient();
 
+	if (!gameState) {
+		return <div className="text-white">Waiting for game...</div>;
+	}
 
 	const PlayerIcon = ({ label }: { label: string }) => {
 		return (
@@ -64,6 +68,14 @@ export const InGame = () => {
 		);
 	}
 
+	const leftPlayerId: PlayerId = getNextPlayerId(gameState.playerId);
+	const topPlayerId: PlayerId = getNextPlayerId(leftPlayerId);
+	const rightPlayerId: PlayerId = getNextPlayerId(topPlayerId);
+
+	const leftPlayerName = gameState.gameState.players.get(leftPlayerId) ?? `Player ${leftPlayerId}`;
+	const topPlayerName = gameState.gameState.players.get(topPlayerId) ?? `Player ${topPlayerId}`;
+	const rightPlayerName = gameState.gameState.players.get(rightPlayerId) ?? `Player ${rightPlayerId}`;
+
 
 	return (
 		<div className="h-full w-full relative gap-4 p-4 text-white">
@@ -72,15 +84,15 @@ export const InGame = () => {
 			</div>
 
 			<div className="absolute top-1/2 left-2 transform -translate-y-1/2 p-3">
-				<PlayerIcon label="Player 2" />
+				<PlayerIcon label={leftPlayerName} />
 			</div>
 
 			<div className="absolute top-2 left-1/2 transform -translate-x-1/2 p-3">
-				<PlayerIcon label="Player 3" />
+				<PlayerIcon label={topPlayerName} />
 			</div>
 
 			<div className="absolute top-1/2 right-2 transform -translate-y-1/2 p-3">
-				<PlayerIcon label="Player 4" />
+				<PlayerIcon label={rightPlayerName} />
 			</div>
 
 			<div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 p-3">
