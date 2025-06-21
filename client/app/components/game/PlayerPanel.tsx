@@ -21,12 +21,13 @@ const myCards = [
 ];
 
 const TableTrumpSelectionPlayerPanel = () => {
+	const gameClient = useGameClient();
+
 	return (
 		<div className="flex flex-col items-center justify-center gap-4">
 			<Button
 				onClick={() => {
-					// Handle accepting the table trump
-					console.log("Table Trump Accepted");
+					gameClient.acceptTrump(true);
 				}}
 				variant="secondary"
 			>
@@ -34,8 +35,7 @@ const TableTrumpSelectionPlayerPanel = () => {
 			</Button>
 			<Button
 				onClick={() => {
-					// Handle declining the table trump
-					console.log("Table Trump Declined");
+					gameClient.acceptTrump(false);
 				}}
 				variant="secondary"
 			>
@@ -53,6 +53,8 @@ interface FreeTrumpSelectionPlayerPanelProps {
 
 
 const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, skippable = true, iconClassName = "" }: FreeTrumpSelectionPlayerPanelProps) => {
+	const gameClient = useGameClient();
+
 	const SuitIcon = ({ suit }: { suit: Suit }) => {
 		switch (suit) {
 			case Suit.Spades:
@@ -72,8 +74,7 @@ const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, skippable = true, iconCl
 		return (
 			<Button
 				onClick={() => {
-					// Handle selecting the trump suit
-					console.log(`Trump Suit Selected: ${suit}`);
+					gameClient.selectTrump(suit);
 				}}
 				variant="secondary"
 			>
@@ -96,8 +97,7 @@ const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, skippable = true, iconCl
 			{skippable && (
 				<Button
 					onClick={() => {
-						// Handle skipping the free trump selection
-						console.log("Free Trump Selection Skipped");
+						gameClient.selectTrump(null);
 					}}
 					variant="secondary"
 				>
@@ -109,38 +109,45 @@ const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, skippable = true, iconCl
 }
 
 const PlayerCardsPanel = ({ cards }: PlayerCardsPanelProps) => {
+	const gameClient = useGameClient();
+
+	const onCardClick = (card: Card) => {
+		gameClient.playCard(card);
+	}
+
 	return (
 		<div className="flex justify-center items-center -space-x-4">
 			{cards.map((card, index) => (
-				<CardFace key={index} card={card} hover />
+				<CardFace key={index} card={card} onClick={onCardClick} hover />
 			))}
 		</div>
 	);
 }
 
 const PlayerPanelContent = () => {
-	// const { gameState } = useGameState();
-	// if (
-	// 	!gameState ||
-	// 	!gameState.gameState ||
-	// 	!gameState.gameState.hand ||
-	// 	!gameState.gameState.gameState ||
-	// 	gameState.gameState.gameState !== GameStage.GameInProgress
-	// ) {
-	// 	return <div>Invalid game stage...</div>;
-	// }
+	const { gameState } = useGameState();
+	if (
+		!gameState ||
+		!gameState.gameState ||
+		!gameState.gameState.hand ||
+		!gameState.gameState.gameState ||
+		gameState.gameState.gameState !== GameStage.GameInProgress
+	) {
+		return <div>Invalid game stage...</div>;
+	}
 
-	// const handState = gameState.gameState.hand.state;
-	// const cards = gameState.userCards;
-	const handState = HandState.HandInProgress;
+	const handState = gameState.gameState.hand.state;
+	const cards = gameState.userCards;
+
+	const skippable = true; // TODO
 
 	switch (handState) {
 		case HandState.TableTrumpSelection:
 			return <TableTrumpSelectionPlayerPanel />;
 		case HandState.FreeTrumpSelection:
-			return <FreeTrumpSelectionPlayerPanel forbiddenSuit={Suit.Clubs} />;
+			return <FreeTrumpSelectionPlayerPanel forbiddenSuit={Suit.Clubs} skippable={skippable} />;
 		case HandState.HandInProgress:
-			return <PlayerCardsPanel cards={myCards} />;
+			return <PlayerCardsPanel cards={cards!} />;
 		case HandState.HandFinished:
 			return <PlayerCardsPanel cards={myCards} />;
 		default:

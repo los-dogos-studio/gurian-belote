@@ -1,11 +1,6 @@
 import React from "react";
 import { Suit, type Card } from "~/client/card";
 
-type CardFaceProps = {
-	card: Card;
-	hover?: boolean;
-};
-
 function getSuitSymbol(suit: Suit): "♠" | "♥" | "♦" | "♣" {
 	switch (suit) {
 		case Suit.Spades:
@@ -36,19 +31,25 @@ function getSuitColor(suit: Suit): string {
 	}
 }
 
-export const CardFace: React.FC<CardFaceProps> = ({ card, hover = false }) => {
+type CardFaceProps = {
+	card: Card;
+	hover?: boolean;
+	onClick?: (card: Card) => void;
+};
+
+const CardFace: React.FC<CardFaceProps> = ({ card, hover = false, onClick = () => { } }) => {
 	const hoverAnimationClass = hover ? "transition-transform duration-300 ease-in-out transform hover:scale-105 hover:outline hover:outline-1 hover:outline-[#FFD700]" : "";
 	const TopLabel = () => (
-		<div className={`absolute top-2 left-2 text-sm font-bold ${getSuitColor(card.suit)}`}>
+		<div className={`text-sm font-bold absolute top-2 left-2 ${getSuitColor(card.suit)}`}>
 			{card.rank}
-			<br />
+			< br />
 			{getSuitSymbol(card.suit)}
-		</div>
+		</div >
 	);
 
 	const BottomLabel = () => (
 		<div
-			className={`absolute bottom-2 right-2 text-sm font-bold rotate-180 text-right ${getSuitColor(card.suit)}`}
+			className={`text-sm font-bold rotate-180 text-right absolute bottom-2 right-2 ${getSuitColor(card.suit)}`}
 		>
 			{card.rank}
 			<br />
@@ -62,9 +63,12 @@ export const CardFace: React.FC<CardFaceProps> = ({ card, hover = false }) => {
 		</div>
 	);
 
-
+	// FIXME: select-none doesn't work in Safari
 	return (
-		<div className={`w-24 h-36 bg-white rounded-xl border-2 border-gray-300 shadow-md p-2 relative ${hoverAnimationClass}`}>
+		<div
+			className={`w-24 h-36 select-none bg-white rounded-xl border-2 border-gray-300 shadow-md p-2 relative ${hoverAnimationClass}`}
+			onClick={() => { onClick(card) }}
+		>
 			<TopLabel />
 			<CenterLabel />
 			<BottomLabel />
