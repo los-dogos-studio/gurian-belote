@@ -1,10 +1,10 @@
-import type { Rank } from "~/client/card";
+import type { Suit } from "~/client/card";
 
 export class SelectTrumpMove {
 	readonly command: string = "selectTrump";
-	suit: Rank | null;
+	suit: Suit | null;
 
-	constructor(suit: Rank | null) {
+	constructor(suit: Suit | null) {
 		this.suit = suit;
 	}
 }

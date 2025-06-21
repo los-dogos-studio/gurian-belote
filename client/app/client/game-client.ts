@@ -7,7 +7,7 @@ import ChooseTeamCommand from './command/choose-team';
 import { TeamId } from './team-id';
 import StartGameCommand from './command/start-game';
 import PlayCardMove from './command/move/play-card';
-import type { Card, Rank } from './card';
+import type { Card, Suit } from './card';
 import PlayTurnCommand from './command/play-turn';
 import AcceptTrumpMove from './command/move/accept-trump';
 import SelectTrumpMove from './command/move/select-trump';
@@ -120,12 +120,12 @@ export class GameClient {
 		this.ws.send(JSON.stringify(command));
 	}
 
-	public selectTrump(rank: Rank | null): void {
+	public selectTrump(suit: Suit | null): void {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
 			throw new Error('WebSocket is not connected.');
 		}
 
-		const move = new SelectTrumpMove(rank);
+		const move = new SelectTrumpMove(suit);
 		const command = new PlayTurnCommand(move);
 		this.ws.send(JSON.stringify(command));
 	}
