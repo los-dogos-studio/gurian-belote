@@ -3,8 +3,8 @@ import type { PlayerId } from "../player-id";
 import type { TeamId } from "../team-id";
 import { Transform, Type } from "class-transformer";
 import 'reflect-metadata';
-import { Hand } from "./hand";
 import { stringMapToIntEnumMap } from "./enum-map-utils";
+import { FreeTrumpSelectionHandState, HandStage, HandState, InProgressHandState, TableTrumpSelectionHandState, type HandStateType } from "./hand";
 
 export enum GameStage {
 	GameReady = "Ready",
@@ -24,10 +24,20 @@ export class GameState {
 	@Transform(stringMapToIntEnumMap)
 	teams: Map<TeamId, string[]>;
 
-	@Type(() => Hand)
+	@Type(() => HandState, {
+		keepDiscriminatorProperty: true,
+		discriminator: {
+			property: 'state',
+			subTypes: [
+				{ value: InProgressHandState, name: HandStage.HandInProgress },
+				{ value: TableTrumpSelectionHandState, name: HandStage.TableTrumpSelection },
+				{ value: FreeTrumpSelectionHandState, name: HandStage.FreeTrumpSelection }
+			]
+		}
+	})
 	@IsOptional()
 	@ValidateNested()
-	hand?: Hand;
+	hand?: HandStateType;
 
 	@IsEnum(GameStage)
 	gameState: GameStage;
@@ -42,7 +52,7 @@ export class GameState {
 		teams: Map<TeamId, string[]>,
 		gameState: GameStage,
 		scores: Map<TeamId, number>,
-		hand?: Hand) {
+		hand?: HandStateType) {
 		this.roomId = roomId;
 		this.players = players;
 		this.teams = teams;

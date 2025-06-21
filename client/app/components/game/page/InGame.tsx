@@ -1,11 +1,11 @@
 import { useGameState } from "../GameStateContext";
-import { useGameClient } from "../GameClientContext";
 import Scoreboard from "../Scoreboard";
-import { Rank, Suit, type Card } from "~/client/card";
+import { type Card } from "~/client/card";
 import PlayerPanel from "../PlayerPanel";
 import { LuUser } from "react-icons/lu";
 import CardFace from "../CardFace";
 import { getNextPlayerId, type PlayerId } from "~/client/player-id";
+import { HandStage, InProgressHandState } from "~/client/state/hand";
 
 const scores = {
 	"You": 0,
@@ -14,14 +14,14 @@ const scores = {
 	"Player 4": 0,
 };
 
-interface PlayedCardsProps {
+interface TrickProps {
 	bottom: Card | undefined;
 	left: Card | undefined;
 	top: Card | undefined;
 	right: Card | undefined;
 }
 
-const PlayedCards = ({ bottom, left, top, right }: PlayedCardsProps) => {
+const Trick = ({ bottom, left, top, right }: TrickProps) => {
 	const CardSlot = ({ card, className = '' }: { card: Card | undefined, className?: string }) => {
 		return (
 			<div className={className}>
@@ -42,16 +42,8 @@ const PlayedCards = ({ bottom, left, top, right }: PlayedCardsProps) => {
 	)
 }
 
-const playedCards: PlayedCardsProps = {
-	"bottom": { rank: Rank.Ace, suit: Suit.Hearts },
-	"left": { rank: Rank.King, suit: Suit.Spades },
-	"top": { rank: Rank.Queen, suit: Suit.Diamonds },
-	"right": { rank: Rank.Jack, suit: Suit.Clubs },
-};
-
 export const InGame = () => {
 	const { gameState } = useGameState();
-	const gameClient = useGameClient();
 
 	if (!gameState) {
 		return <div className="text-white">Waiting for game...</div>;
@@ -68,6 +60,25 @@ export const InGame = () => {
 		);
 	}
 
+	const PlayArea = () => {
+		if (!gameState.gameState.hand || gameState.gameState.hand.state !== HandStage.HandInProgress) {
+			return <div />;
+		}
+
+		const inProgressHand = gameState.gameState.hand as InProgressHandState;
+
+		return (
+			<div className="inline-block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+				<Trick
+					bottom={inProgressHand.trick.playedCards.get(gameState.playerId)}
+					left={inProgressHand.trick.playedCards.get(leftPlayerId)}
+					top={inProgressHand.trick.playedCards.get(topPlayerId)}
+					right={inProgressHand.trick.playedCards.get(rightPlayerId)}
+				/>
+			</div>
+		);
+	}
+
 	const leftPlayerId: PlayerId = getNextPlayerId(gameState.playerId);
 	const topPlayerId: PlayerId = getNextPlayerId(leftPlayerId);
 	const rightPlayerId: PlayerId = getNextPlayerId(topPlayerId);
@@ -75,7 +86,6 @@ export const InGame = () => {
 	const leftPlayerName = gameState.gameState.players.get(leftPlayerId) ?? `Player ${leftPlayerId}`;
 	const topPlayerName = gameState.gameState.players.get(topPlayerId) ?? `Player ${topPlayerId}`;
 	const rightPlayerName = gameState.gameState.players.get(rightPlayerId) ?? `Player ${rightPlayerId}`;
-
 
 	return (
 		<div className="h-full w-full relative gap-4 p-4 text-white">
@@ -99,14 +109,7 @@ export const InGame = () => {
 				<PlayerPanel />
 			</div>
 
-			<div className="inline-block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-				<PlayedCards
-					bottom={playedCards['bottom']}
-					left={playedCards['left']}
-					top={playedCards['top']}
-					right={playedCards['right']}
-				/>
-			</div>
+			<PlayArea />
 		</div>
 	);
 }

@@ -1,8 +1,20 @@
-import type { Card, Suit } from "../card";
-import type { PlayerId } from "../player-id";
+import { Transform, Type } from "class-transformer";
+import type { Card } from "../card";
+import { stringMapToIntEnumMap } from "./enum-map-utils";
+import { IsEnum } from "class-validator";
+import { PlayerId } from "../player-id";
 
-export interface Trick {
-	startingPlayer: PlayerId;
-	cards: Map<PlayerId, Card>;
-	trump: Suit;
+export class Trick {
+	@Type(() => Map<PlayerId, Card>)
+	@Transform(stringMapToIntEnumMap)
+	playedCards: Map<PlayerId, Card>
+
+	@IsEnum(PlayerId)
+	startingPlayer: PlayerId
+
+	constructor(playedCards: Map<PlayerId, Card>, startingPlayer: PlayerId) {
+		this.playedCards = playedCards;
+		this.startingPlayer = startingPlayer;
+	}
 }
+

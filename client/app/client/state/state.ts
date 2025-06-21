@@ -1,5 +1,5 @@
 import { IsArray, IsEnum, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
-import type { Card } from "../card";
+import { Card } from "../card";
 import { PlayerId } from "../player-id";
 import { GameState } from "./game-state";
 import { Type } from "class-transformer";
@@ -17,9 +17,9 @@ export class State {
 	@IsEnum(PlayerId)
 	playerId: PlayerId;
 
-
-	@IsOptional()
+	@Type(() => Card)
 	@ValidateNested({ each: true })
+	@IsOptional()
 	@IsArray()
 	userCards?: Card[];
 

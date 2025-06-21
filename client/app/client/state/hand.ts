@@ -1,76 +1,106 @@
-import { IsEnum, IsOptional, ValidateNested } from "class-validator";
-import { Suit, type Card } from "../card";
+import { Card, Suit } from "../card";
 import { PlayerId } from "../player-id";
 import type { TeamId } from "../team-id";
-import type { Trick } from "./trick";
-import { Transform, Type } from "class-transformer";
 import "reflect-metadata";
 import { stringMapToIntEnumMap } from "./enum-map-utils";
+import { Transform, Type } from "class-transformer";
+import { IsEnum, ValidateNested } from "class-validator";
+import { Trick } from "./trick";
 
-export enum HandState {
+export enum HandStage {
 	TableTrumpSelection = "TableTrumpSelection",
 	FreeTrumpSelection = "FreeTrumpSelection",
 	HandInProgress = "HandInProgress",
 	HandFinished = "HandFinished"
 }
 
-export class Hand {
-	@IsEnum(HandState)
-	state: HandState;
+export abstract class HandState {
+	@IsEnum(HandStage)
+	state: HandStage;
 
-	@ValidateNested()
-	@IsOptional()
-	currentTrick?: Trick;
-
-	@IsEnum(PlayerId)
-	@IsOptional()
-	startingPlayer?: PlayerId;
-
-	@ValidateNested()
-	@Transform(stringMapToIntEnumMap)
-	@Type(() => Map<TeamId, Number>)
-	totals: Map<TeamId, number>;
-
-	@ValidateNested()
-	@Transform(stringMapToIntEnumMap)
-	@Type(() => Map<PlayerId, Map<Card, boolean>>)
-	playerCards: Map<PlayerId, Map<Card, boolean>>;
-
-	@ValidateNested()
-	tableTrumpCard: Card;
-
-	@ValidateNested()
-	@Transform(stringMapToIntEnumMap)
-	@Type(() => Map<PlayerId, Boolean>)
-	tableTrumpSelectionStatus: Map<PlayerId, boolean>;
-
-	@ValidateNested()
-	@Transform(stringMapToIntEnumMap)
-	@Type(() => Map<PlayerId, Boolean>)
-	freeTrumpSelectionStatus: Map<PlayerId, boolean>;
-
-	@IsEnum(Suit)
-	trump: Suit;
-
-	constructor(
-		state: HandState,
-		currentTrick: Trick | undefined,
-		startingPlayer: PlayerId | undefined,
-		totals: Map<TeamId, number>,
-		playerCards: Map<PlayerId, Map<Card, boolean>>,
-		tableTrumpCard: Card,
-		tableTrumpSelectionStatus: Map<PlayerId, boolean>,
-		freeTrumpSelectionStatus: Map<PlayerId, boolean>,
-		trump: Suit
-	) {
+	constructor(state: HandStage) {
 		this.state = state;
-		this.currentTrick = currentTrick;
-		this.startingPlayer = startingPlayer;
-		this.totals = totals;
-		this.playerCards = playerCards;
-		this.tableTrumpCard = tableTrumpCard;
-		this.tableTrumpSelectionStatus = tableTrumpSelectionStatus;
-		this.freeTrumpSelectionStatus = freeTrumpSelectionStatus;
-		this.trump = trump;
 	}
 }
+
+export class TableTrumpSelectionHandState extends HandState {
+	@Type(() => Card)
+	@ValidateNested()
+	tableTrumpCard: Card
+
+	@IsEnum(PlayerId)
+	startingPlayer: PlayerId;
+
+	@Type(() => Map<PlayerId, boolean>)
+	@Transform(stringMapToIntEnumMap)
+	selectionStatus: Map<PlayerId, boolean>
+
+
+	constructor(
+		state: HandStage,
+		startingPlayer: PlayerId,
+		tableTrumpCard: Card,
+		selectionStatus: Map<PlayerId, boolean>
+	) {
+		super(state);
+		this.startingPlayer = startingPlayer;
+		this.tableTrumpCard = tableTrumpCard;
+		this.selectionStatus = selectionStatus;
+	}
+}
+
+export class FreeTrumpSelectionHandState extends HandState {
+	@Type(() => Card)
+	@ValidateNested()
+	tableTrumpCard: Card
+
+	@IsEnum(PlayerId)
+	startingPlayer: PlayerId;
+
+	@Type(() => Map<PlayerId, boolean>)
+	@Transform(stringMapToIntEnumMap)
+	selectionStatus: Map<PlayerId, boolean>
+
+	constructor(
+		state: HandStage,
+		tableTrumpCard: Card,
+		selectionStatus: Map<PlayerId, boolean>,
+		startingPlayer: PlayerId
+	) {
+		super(state);
+		this.startingPlayer = startingPlayer;
+		this.tableTrumpCard = tableTrumpCard;
+		this.selectionStatus = selectionStatus;
+	}
+}
+
+export class InProgressHandState extends HandState {
+	@IsEnum(Suit)
+	trump: Suit
+
+	@Type(() => Trick)
+	@ValidateNested()
+	trick: Trick
+
+	@Type(() => Map<TeamId, number>)
+	@Transform(stringMapToIntEnumMap)
+	totals: Map<TeamId, number>
+
+	constructor(
+		state: HandStage,
+		trump: Suit,
+		trick: Trick,
+		totals: Map<TeamId, number>
+	) {
+		super(state);
+		this.trump = trump;
+		this.trick = trick;
+		this.totals = totals;
+	}
+}
+
+export type HandStateType =
+	| TableTrumpSelectionHandState
+	| FreeTrumpSelectionHandState
+	| InProgressHandState;
+
