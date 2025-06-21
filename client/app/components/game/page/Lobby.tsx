@@ -32,42 +32,44 @@ const Lobby = () => {
 	}
 
 	return (
-		<Panel className="max-w-md w-full border border-yellow-600/30 rounded-2xl p-8">
-			<Title />
-			<InputField
-				label={'Player Name'}
-				placeholder={'Choose your alias...'}
-				value={userId}
-				onChange={setUserId}
-			/>
-			<Button
-				onClick={handleCreateRoom}
-				disabled={!userId}
-				className="mb-4"
-			>
-				<LuCrown className="w-5 h-5 mr-2" />
-				Create Room
-			</Button>
+		<div className="w-full h-full grid place-items-center">
+			<Panel className="max-w-md w-full border border-yellow-600/30 rounded-2xl p-8">
+				<Title />
+				<InputField
+					label={'Player Name'}
+					placeholder={'Choose your alias...'}
+					value={userId}
+					onChange={setUserId}
+				/>
+				<Button
+					onClick={handleCreateRoom}
+					disabled={!userId}
+					className="mb-4"
+				>
+					<LuCrown className="w-5 h-5 mr-2" />
+					Create Room
+				</Button>
 
-			<Break label={'OR'} />
+				<Break label={'OR'} />
 
-			<InputField
-				label={'Invite Code'}
-				placeholder={'Enter invitation code...'}
-				value={roomId}
-				onChange={setRoomId}
-				disabled={!userId}
-			/>
-			<Button
-				onClick={handleJoinRoom}
-				disabled={!userId || !roomId}
-				variant="secondary"
-				className="mb-4"
-			>
-				<LuLogIn className="w-5 h-5 mr-2" />
-				Join Room
-			</Button>
-		</Panel>
+				<InputField
+					label={'Invite Code'}
+					placeholder={'Enter invitation code...'}
+					value={roomId}
+					onChange={setRoomId}
+					disabled={!userId}
+				/>
+				<Button
+					onClick={handleJoinRoom}
+					disabled={!userId || !roomId}
+					variant="secondary"
+					className="mb-4"
+				>
+					<LuLogIn className="w-5 h-5 mr-2" />
+					Join Room
+				</Button>
+			</Panel>
+		</div>
 	);
 };
 
