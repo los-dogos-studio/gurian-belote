@@ -29,8 +29,10 @@ const PlayedCards = ({ bottom, left, top, right }: PlayedCardsProps) => {
 		);
 	}
 
+	// rethink?
+	// TODO: add z
 	return (
-		<div className="relative w-min h-full gap-4">
+		<div className="relative w-full h-full">
 			<CardSlot card={bottom} className='absolute bottom-2 left-1/2 transform -translate-x-1/2' />
 			<CardSlot card={left} className='absolute left-2 top-1/2 transform -translate-y-1/2' />
 			<CardSlot card={top} className='absolute top-2 left-1/2 transform -translate-x-1/2' />
@@ -62,35 +64,36 @@ export const InGame = () => {
 		);
 	}
 
+
 	return (
-		<div className="grid grid-cols-3 grid-rows-3 gap-4 h-screen w-screen p-4 text-white">
-			<div className="col-start-3 row-start-1 flex justify-end" >
+		<div className="h-full w-full relative gap-4 p-4 text-white">
+			<div className="absolute top-2 right-2 p-3">
 				<Scoreboard scores={scores} className="h-min" />
 			</div>
 
-			<div className="col-start-1 row-start-2 flex justify-start items-center">
+			<div className="absolute top-1/2 left-2 transform -translate-y-1/2 p-3">
 				<PlayerIcon label="Player 2" />
 			</div>
 
-			<div className="col-start-3 row-start-2 flex justify-end items-center">
+			<div className="absolute top-2 left-1/2 transform -translate-x-1/2 p-3">
 				<PlayerIcon label="Player 3" />
 			</div>
 
-			<div className="col-start-2 row-start-1 flex flex-col justify-start items-center">
+			<div className="absolute top-1/2 right-2 transform -translate-y-1/2 p-3">
 				<PlayerIcon label="Player 4" />
 			</div>
 
-			<div className="col-start-2 row-start-2 flex justify-center items-center">
+			<div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 p-3">
+				<PlayerPanel />
+			</div>
+
+			<div className="inline-block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
 				<PlayedCards
 					bottom={playedCards['bottom']}
 					left={playedCards['left']}
 					top={playedCards['top']}
 					right={playedCards['right']}
 				/>
-			</div>
-
-			<div className="col-start-2 row-start-3 flex flex-col justify-end items-center">
-				<PlayerPanel />
 			</div>
 		</div>
 	);
