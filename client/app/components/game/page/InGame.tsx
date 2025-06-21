@@ -6,13 +6,7 @@ import { LuUser } from "react-icons/lu";
 import CardFace from "../CardFace";
 import { getNextPlayerId, type PlayerId } from "~/client/player-id";
 import { HandStage, InProgressHandState } from "~/client/state/hand";
-
-const scores = {
-	"You": 0,
-	"Player 2": 0,
-	"Player 3": 0,
-	"Player 4": 0,
-};
+import { TeamId } from "~/client/team-id";
 
 interface TrickProps {
 	bottom: Card | undefined;
@@ -86,6 +80,11 @@ export const InGame = () => {
 	const leftPlayerName = gameState.gameState.players.get(leftPlayerId) ?? `Player ${leftPlayerId}`;
 	const topPlayerName = gameState.gameState.players.get(topPlayerId) ?? `Player ${topPlayerId}`;
 	const rightPlayerName = gameState.gameState.players.get(rightPlayerId) ?? `Player ${rightPlayerId}`;
+
+	const scores = {
+		"Team 1": gameState.gameState.scores.get(TeamId.Team1) ?? -1,
+		"Team 2": gameState.gameState.scores.get(TeamId.Team2) ?? -1,
+	};
 
 	return (
 		<div className="h-full w-full relative gap-4 p-4 text-white">
