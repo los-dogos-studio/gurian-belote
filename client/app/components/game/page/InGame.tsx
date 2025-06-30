@@ -5,8 +5,9 @@ import PlayerPanel from "../PlayerPanel";
 import { LuUser } from "react-icons/lu";
 import CardFace from "../CardFace";
 import { getNextPlayerId, type PlayerId } from "~/client/player-id";
-import { HandStage, InProgressHandState } from "~/client/state/hand";
+import { FreeTrumpSelectionHandState, HandStage, InProgressHandState, TableTrumpSelectionHandState } from "~/client/state/hand";
 import { TeamId } from "~/client/team-id";
+import Panel from "~/components/Panel";
 
 interface TrickProps {
 	bottom: Card | undefined;
@@ -54,23 +55,42 @@ export const InGame = () => {
 		);
 	}
 
+	const TableTrumpQuery = (tableTrumpCard: Card, label: string) => {
+		return (
+			<Panel className="flex flex-col items-center justify-center gap-6 px-8 py-6 text-center">
+				<p className="text-lg font-semibold">{label}</p>
+				<CardFace card={tableTrumpCard} className="mb-4" />
+			</Panel>
+		);
+	}
+
 	const PlayArea = () => {
-		if (!gameState.gameState.hand || gameState.gameState.hand.state !== HandStage.HandInProgress) {
+		if (!gameState.gameState.hand) {
 			return <div />;
 		}
 
-		const inProgressHand = gameState.gameState.hand as InProgressHandState;
+		switch (gameState.gameState.hand.state) {
+			case HandStage.TableTrumpSelection:
+				return TableTrumpQuery((gameState.gameState.hand as TableTrumpSelectionHandState).tableTrumpCard, "Accept Table Trump?");
+			case HandStage.FreeTrumpSelection:
+				return TableTrumpQuery((gameState.gameState.hand as FreeTrumpSelectionHandState).tableTrumpCard, "Select Table Trump");
 
-		return (
-			<div className="inline-block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-				<Trick
-					bottom={inProgressHand.trick.playedCards.get(gameState.playerId)}
-					left={inProgressHand.trick.playedCards.get(leftPlayerId)}
-					top={inProgressHand.trick.playedCards.get(topPlayerId)}
-					right={inProgressHand.trick.playedCards.get(rightPlayerId)}
-				/>
-			</div>
-		);
+			case HandStage.HandInProgress:
+				const inProgressHand = gameState.gameState.hand as InProgressHandState;
+				return (
+					<Trick
+						bottom={inProgressHand.trick.playedCards.get(gameState.playerId)}
+						left={inProgressHand.trick.playedCards.get(leftPlayerId)}
+						top={inProgressHand.trick.playedCards.get(topPlayerId)}
+						right={inProgressHand.trick.playedCards.get(rightPlayerId)}
+					/>
+				);
+
+			default:
+				return (
+					<div />
+				);
+		}
 	}
 
 	const leftPlayerId: PlayerId = getNextPlayerId(gameState.playerId);
@@ -108,7 +128,9 @@ export const InGame = () => {
 				<PlayerPanel />
 			</div>
 
-			<PlayArea />
+			<div className="inline-block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+				<PlayArea />
+			</div>
 		</div>
 	);
 }

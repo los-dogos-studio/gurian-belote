@@ -35,9 +35,10 @@ type CardFaceProps = {
 	card: Card;
 	hover?: boolean;
 	onClick?: (card: Card) => void;
+	className?: string;
 };
 
-const CardFace: React.FC<CardFaceProps> = ({ card, hover = false, onClick = () => { } }) => {
+const CardFace: React.FC<CardFaceProps> = ({ card, hover = false, onClick = () => { }, className = '' }) => {
 	const hoverAnimationClass = hover ? "transition-transform duration-300 ease-in-out transform hover:scale-105 hover:outline hover:outline-1 hover:outline-[#FFD700]" : "";
 	const TopLabel = () => (
 		<div className={`text-sm font-bold absolute top-2 left-2 ${getSuitColor(card.suit)}`}>
@@ -66,7 +67,7 @@ const CardFace: React.FC<CardFaceProps> = ({ card, hover = false, onClick = () =
 	// FIXME: select-none doesn't work in Safari
 	return (
 		<div
-			className={`w-24 h-36 select-none bg-white rounded-xl border-2 border-gray-300 shadow-md p-2 relative ${hoverAnimationClass}`}
+			className={`w-24 h-36 select-none bg-white rounded-xl border-2 border-gray-300 shadow-md p-2 relative ${hoverAnimationClass} ${className}`}
 			onClick={() => { onClick(card) }}
 		>
 			<TopLabel />
