@@ -8,7 +8,7 @@ import { getNextPlayerId, type PlayerId } from "~/client/player-id";
 import { FreeTrumpSelectionHandState, HandStage, InProgressHandState, TableTrumpSelectionHandState } from "~/client/state/hand";
 import { TeamId } from "~/client/team-id";
 import Panel from "~/components/Panel";
-import { getSuitSymbol } from "../CardUtils";
+import { getSuitSymbol } from "../card-utils";
 
 interface TrickProps {
 	bottom: Card | undefined;

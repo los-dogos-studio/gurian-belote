@@ -1,7 +1,7 @@
 import React from "react";
 import { type Card } from "~/client/card";
 import CardBackground from "./CardBackground";
-import { getSuitColor, getSuitSymbol } from "./CardUtils";
+import { getSuitColor, getSuitSymbol } from "./card-utils";
 
 type CardFaceProps = {
 	card: Card;
