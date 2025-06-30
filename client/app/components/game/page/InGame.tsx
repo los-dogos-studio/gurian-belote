@@ -1,6 +1,6 @@
 import { useGameState } from "../GameStateContext";
 import Scoreboard from "../Scoreboard";
-import { type Card } from "~/client/card";
+import { Suit, type Card } from "~/client/card";
 import PlayerPanel from "../PlayerPanel";
 import { LuUser } from "react-icons/lu";
 import CardFace from "../CardFace";
@@ -8,6 +8,7 @@ import { getNextPlayerId, type PlayerId } from "~/client/player-id";
 import { FreeTrumpSelectionHandState, HandStage, InProgressHandState, TableTrumpSelectionHandState } from "~/client/state/hand";
 import { TeamId } from "~/client/team-id";
 import Panel from "~/components/Panel";
+import { getSuitSymbol } from "../CardUtils";
 
 interface TrickProps {
 	bottom: Card | undefined;
@@ -64,6 +65,16 @@ export const InGame = () => {
 		);
 	}
 
+	const TrumpDisplay = ({ suit }: { suit: Suit }) => {
+		return (
+			<Panel className="w-18 h-18 flex flex-col items-center justify-center gap-3 text-center">
+				<span className={`text-[3em] w-full h-full flex items-center justify-center text-center text-white/80`}>
+					{getSuitSymbol(suit)}
+				</span>
+			</Panel>
+		);
+	}
+
 	const PlayArea = () => {
 		if (!gameState.gameState.hand) {
 			return <div />;
@@ -108,7 +119,10 @@ export const InGame = () => {
 
 	return (
 		<div className="h-full w-full relative gap-4 p-4 text-white">
-			<div className="absolute top-2 right-2 p-3">
+			<div className="absolute top-2 right-2 p-3 flex gap-4">
+				{gameState.gameState.hand && gameState.gameState.hand.state === HandStage.HandInProgress &&
+					<TrumpDisplay suit={(gameState.gameState.hand as InProgressHandState).trump} />
+				}
 				<Scoreboard scores={scores} className="h-min" />
 			</div>
 
