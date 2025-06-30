@@ -1,35 +1,7 @@
 import React from "react";
-import { Suit, type Card } from "~/client/card";
-
-function getSuitSymbol(suit: Suit): "♠" | "♥" | "♦" | "♣" {
-	switch (suit) {
-		case Suit.Spades:
-			return "♠";
-		case Suit.Hearts:
-			return "♥";
-		case Suit.Diamonds:
-			return "♦";
-		case Suit.Clubs:
-			return "♣";
-		default:
-			throw new Error("Invalid suit");
-	}
-}
-
-function getSuitColor(suit: Suit): string {
-	switch (suit) {
-		case Suit.Spades:
-			return "text-black";
-		case Suit.Hearts:
-			return "text-red-500";
-		case Suit.Diamonds:
-			return "text-red-500";
-		case Suit.Clubs:
-			return "text-black";
-		default:
-			throw new Error("Invalid suit");
-	}
-}
+import { type Card } from "~/client/card";
+import CardBackground from "./CardBackground";
+import { getSuitColor, getSuitSymbol } from "./CardUtils";
 
 type CardFaceProps = {
 	card: Card;
@@ -67,12 +39,13 @@ const CardFace: React.FC<CardFaceProps> = ({ card, hover = false, onClick = () =
 	// FIXME: select-none doesn't work in Safari
 	return (
 		<div
-			className={`w-24 h-36 select-none bg-white rounded-xl border-2 border-gray-300 shadow-md p-2 relative ${hoverAnimationClass} ${className}`}
 			onClick={() => { onClick(card) }}
 		>
-			<TopLabel />
-			<CenterLabel />
-			<BottomLabel />
+			<CardBackground className={`${hoverAnimationClass} ${className}`}>
+				<TopLabel />
+				<CenterLabel />
+				<BottomLabel />
+			</CardBackground>
 		</div>
 	);
 };
