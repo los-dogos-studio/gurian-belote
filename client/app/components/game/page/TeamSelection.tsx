@@ -4,8 +4,7 @@ import ListPanel from "~/components/ListPanel";
 import { TeamId } from "~/client/team-id";
 import Button from "~/components/Button";
 import { useGameClient } from "../GameClientContext";
-import { LuPlus } from "react-icons/lu";
-
+import { LuCopy, LuPlus } from "react-icons/lu";
 
 interface TeamColumnProps {
 	teamId: TeamId,
@@ -48,11 +47,24 @@ export const TeamSelection = () => {
 
 	const Title = () => {
 		return (
-			<h1 className="text-2xl font-bold text-amber-100/90 text-center mb-6 tracking-wider">
-				Choose your team
+			<h1 className="text-2xl font-bold text-amber-100/90 text-center mb-3 tracking-wider">
+				Choose Your Team
 			</h1>
 		);
 	}
+
+	const RoomIdLabel = () => (
+		<div className="mb-4 flex items-center justify-center space-x-2">
+			<span className="text-sm font-bold text-amber-100/70 tracking-wider">
+				{`Room ID: ${gameState.gameState.roomId}`}
+			</span>
+			<LuCopy
+				className="inline-block cursor-pointer text-gray-400/30 hover:text-amber-100/70 transition-colors duration-200"
+				onClick={() => navigator.clipboard.writeText(gameState.gameState.roomId)}
+				size={"1.25rem"}
+				title="Copy Room ID" />
+		</div>
+	);
 
 	const handleJoinTeam = (teamId: TeamId) => {
 		client.chooseTeam(teamId);
@@ -70,6 +82,7 @@ export const TeamSelection = () => {
 		<div className="w-full h-full grid place-items-center">
 			<Panel className="max-w-md w-full border border-yellow-600/30 rounded-2xl p-8">
 				<Title />
+				<RoomIdLabel />
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl mx-auto mb-6">
 					<TeamColumn
 						teamId={TeamId.Team1}
