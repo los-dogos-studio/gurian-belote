@@ -155,9 +155,9 @@ const PlayerPanelContent = () => {
 	}
 }
 
-export const PlayerPanel = () => {
+export const PlayerPanel = ({ className = '' }: { className?: string }) => {
 	return (
-		<Panel className="flex justify-center p-4 mb-2 gap-4">
+		<Panel className={`flex justify-center p-4 mb-2 gap-4 ${className}`}>
 			<PlayerPanelContent />
 		</Panel>
 	);

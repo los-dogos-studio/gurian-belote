@@ -1,5 +1,5 @@
 import { Card, Suit } from "../card";
-import { PlayerId } from "../player-id";
+import { getNextPlayerId, PlayerId } from "../player-id";
 import type { TeamId } from "../team-id";
 import "reflect-metadata";
 import { stringMapToIntEnumMap } from "./enum-map-utils";
@@ -21,6 +21,8 @@ export abstract class HandState {
 	constructor(state: HandStage) {
 		this.state = state;
 	}
+
+	abstract getCurrentTurn(): PlayerId;
 }
 
 export class TableTrumpSelectionHandState extends HandState {
@@ -47,8 +49,19 @@ export class TableTrumpSelectionHandState extends HandState {
 		this.tableTrumpCard = tableTrumpCard;
 		this.selectionStatus = selectionStatus;
 	}
+
+    getCurrentTurn(): PlayerId {
+		let result = this.startingPlayer;
+		for (const [playerId, selected] of this.selectionStatus.entries()) {
+			if (selected) {
+				result = getNextPlayerId(playerId);
+			}
+		}
+		return result;
+    }
 }
 
+// TODO: DRY this code
 export class FreeTrumpSelectionHandState extends HandState {
 	@Type(() => Card)
 	@ValidateNested()
@@ -72,6 +85,16 @@ export class FreeTrumpSelectionHandState extends HandState {
 		this.tableTrumpCard = tableTrumpCard;
 		this.selectionStatus = selectionStatus;
 	}
+
+    getCurrentTurn(): PlayerId {
+		let result = this.startingPlayer;
+		for (const [playerId, selected] of this.selectionStatus.entries()) {
+			if (selected) {
+				result = getNextPlayerId(playerId);
+			}
+		}
+		return result;
+    }
 }
 
 export class InProgressHandState extends HandState {
@@ -97,6 +120,14 @@ export class InProgressHandState extends HandState {
 		this.trick = trick;
 		this.totals = totals;
 	}
+
+    getCurrentTurn(): PlayerId {
+		let result = this.trick.startingPlayer;
+		for (let i = 0; i < this.trick.playedCards.size; i++) {
+			result = getNextPlayerId(result);
+		}
+		return result;
+    }
 }
 
 export type HandStateType =

@@ -45,10 +45,10 @@ export const InGame = () => {
 		return <div className="text-white">Waiting for game...</div>;
 	}
 
-	const PlayerIcon = ({ label }: { label: string }) => {
+	const PlayerIcon = ({ label, className = '' }: { label: string, className?: string }) => {
 		return (
 			<div className="flex flex-col items-center justify-center">
-				<div className="w-12 h-12 bg-gray-800 rounded-full mx-auto mb-2 flex items-center justify-center">
+				<div className={`w-12 h-12 bg-gray-800 rounded-full mx-auto mb-2 flex items-center justify-center ${className}`}>
 					<LuUser className="w-6 h-6 text-white" />
 				</div>
 				<p className="text-s">{label}</p>
@@ -74,6 +74,10 @@ export const InGame = () => {
 			</Panel>
 		);
 	}
+
+	const leftPlayerId: PlayerId = getNextPlayerId(gameState.playerId);
+	const topPlayerId: PlayerId = getNextPlayerId(leftPlayerId);
+	const rightPlayerId: PlayerId = getNextPlayerId(topPlayerId);
 
 	const PlayArea = () => {
 		if (!gameState.gameState.hand) {
@@ -104,13 +108,12 @@ export const InGame = () => {
 		}
 	}
 
-	const leftPlayerId: PlayerId = getNextPlayerId(gameState.playerId);
-	const topPlayerId: PlayerId = getNextPlayerId(leftPlayerId);
-	const rightPlayerId: PlayerId = getNextPlayerId(topPlayerId);
-
 	const leftPlayerName = gameState.gameState.players.get(leftPlayerId) ?? `Player ${leftPlayerId}`;
 	const topPlayerName = gameState.gameState.players.get(topPlayerId) ?? `Player ${topPlayerId}`;
 	const rightPlayerName = gameState.gameState.players.get(rightPlayerId) ?? `Player ${rightPlayerId}`;
+
+	const currentPlayerId = gameState.gameState.hand?.getCurrentTurn();
+	const currentPlayerOutline = "outline outline-1 outline-[#F3E5AB] shadow-[0_0_6px_rgba(243,229,171,0.6)]"
 
 	const scores = {
 		"Team 1": gameState.gameState.scores.get(TeamId.Team1) ?? -1,
@@ -127,22 +130,22 @@ export const InGame = () => {
 			</div>
 
 			<div className="absolute top-1/2 left-2 transform -translate-y-1/2 p-3">
-				<PlayerIcon label={leftPlayerName} />
+				<PlayerIcon label={leftPlayerName} className={currentPlayerId === leftPlayerId ? currentPlayerOutline : ''}/>
 			</div>
 
 			<div className="absolute top-2 left-1/2 transform -translate-x-1/2 p-3">
-				<PlayerIcon label={topPlayerName} />
+				<PlayerIcon label={topPlayerName} className={currentPlayerId === topPlayerId ? currentPlayerOutline : ''}/>
 			</div>
 
 			<div className="absolute top-1/2 right-2 transform -translate-y-1/2 p-3">
-				<PlayerIcon label={rightPlayerName} />
+				<PlayerIcon label={rightPlayerName} className={currentPlayerId === rightPlayerId ? currentPlayerOutline : ''}/>
 			</div>
 
 			<div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 p-3">
-				<PlayerPanel />
+				<PlayerPanel className={currentPlayerId === gameState.playerId ? currentPlayerOutline : ''}/>
 			</div>
 
-			<div className="inline-block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+			<div className="inline-block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-80">
 				<PlayArea />
 			</div>
 		</div>
