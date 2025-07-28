@@ -39,7 +39,7 @@ const TableTrumpSelectionPlayerPanel = () => {
 				}}
 				variant="secondary"
 			>
-				Decline Table Table
+				Decline Table Trump
 			</Button>
 		</div>
 	);
