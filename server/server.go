@@ -86,7 +86,7 @@ func (s *Server) serve(user *User, ws *websocket.Conn) {
 		_, msg, err := ws.ReadMessage()
 
 		if err != nil {
-			// TODO
+			break
 		}
 
 		var cmd json.RawMessage
