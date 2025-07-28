@@ -5,7 +5,7 @@ import CardFace from "./CardFace";
 import { useGameClient } from "./GameClientContext";
 import { useGameState } from "./GameStateContext";
 import { GameStage } from "~/client/state/game-state";
-import { HandStage } from "~/client/state/hand";
+import { HandStage, TableTrumpSelectionHandState } from "~/client/state/hand";
 import { LuClub, LuDiamond, LuHeart, LuSpade } from "react-icons/lu";
 
 interface PlayerCardsPanelProps {
@@ -136,7 +136,8 @@ const PlayerPanelContent = () => {
 		return <div>Invalid game stage...</div>;
 	}
 
-	const handState = gameState.gameState.hand.state;
+	const hand = gameState.gameState.hand;
+	const handState = hand.state;
 	const cards = gameState.userCards;
 
 	const skippable = true; // TODO
@@ -145,7 +146,7 @@ const PlayerPanelContent = () => {
 		case HandStage.TableTrumpSelection:
 			return <TableTrumpSelectionPlayerPanel />;
 		case HandStage.FreeTrumpSelection:
-			return <FreeTrumpSelectionPlayerPanel forbiddenSuit={Suit.Clubs} skippable={skippable} />;
+			return <FreeTrumpSelectionPlayerPanel forbiddenSuit={(hand as TableTrumpSelectionHandState).tableTrumpCard.suit} skippable={skippable} />;
 		case HandStage.HandInProgress:
 			return <PlayerCardsPanel cards={cards!} />;
 		case HandStage.HandFinished:
