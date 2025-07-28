@@ -31,7 +31,8 @@ const (
 type PlayerId int
 
 const (
-	Player1 PlayerId = iota + 1
+	NoId PlayerId = iota
+	Player1
 	Player2
 	Player3
 	Player4
@@ -40,7 +41,8 @@ const (
 type TeamId int
 
 const (
-	Team1 TeamId = iota + 1
+	NoTeamId TeamId = iota
+	Team1
 	Team2
 )
 
