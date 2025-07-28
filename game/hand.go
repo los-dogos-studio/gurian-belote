@@ -117,21 +117,21 @@ func (h *Hand) SelectTrump(player PlayerId, suit *Suit) error {
 		return err
 	}
 
-	if *suit == h.TableTrumpCard.Suit {
-		return fmt.Errorf("trump suit cannot be the same as table trump suit")
-	}
-
 	if player == h.getLastPlayer() && suit == nil {
 		return fmt.Errorf("final player must select a trump suit")
 	}
 
-	if suit != nil {
-		h.PlayerCards[player][h.TableTrumpCard] = true
-		h.handleTrumpSelected(*suit)
+	if suit == nil {
+		h.FreeTrumpSelectionStatus[player] = true
 		return nil
 	}
 
-	h.FreeTrumpSelectionStatus[player] = true
+	if *suit == h.TableTrumpCard.Suit {
+		return fmt.Errorf("trump suit cannot be the same as table trump suit")
+	}
+
+	h.PlayerCards[player][h.TableTrumpCard] = true
+	h.handleTrumpSelected(*suit)
 	return nil
 }
 
