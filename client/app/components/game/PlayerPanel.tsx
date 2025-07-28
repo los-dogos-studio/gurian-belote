@@ -1,4 +1,4 @@
-import { Rank, Suit, type Card } from "~/client/card";
+import { Suit, type Card } from "~/client/card";
 import Panel from "../Panel";
 import Button from "../Button";
 import CardFace from "./CardFace";
@@ -8,22 +8,37 @@ import { GameStage } from "~/client/state/game-state";
 import { HandStage, TableTrumpSelectionHandState } from "~/client/state/hand";
 import { LuClub, LuDiamond, LuHeart, LuSpade } from "react-icons/lu";
 
+interface TableTrumpSelectionPlayerPanelProps {
+	cards: Card[];
+}
+
 interface PlayerCardsPanelProps {
 	cards: Card[];
 }
 
-const myCards = [
-	{ suit: Suit.Spades, rank: Rank.Ace },
-	{ suit: Suit.Hearts, rank: Rank.King },
-	{ suit: Suit.Diamonds, rank: Rank.Queen },
-	{ suit: Suit.Clubs, rank: Rank.Jack },
-	{ suit: Suit.Spades, rank: Rank.Ten },
-];
+interface TrumpSelectionPlayerPanelProps {
+	cards: Card[];
+	controls: React.ReactNode;
+}
 
-const TableTrumpSelectionPlayerPanel = () => {
+const TrumpSelectionPlayerPanel = ({ cards, controls }: TrumpSelectionPlayerPanelProps) => {
+	return (
+		<div className="flex items-center justify-center gap-8">
+			<div className="flex justify-center items-center -space-x-4">
+				{cards.map((card, index) => (
+					<CardFace key={index} card={card} hover />
+				))}
+			</div>
+			{controls}
+		</div>
+	);
+
+}
+
+const TableTrumpSelectionPlayerPanel = ({ cards }: TableTrumpSelectionPlayerPanelProps) => {
 	const gameClient = useGameClient();
 
-	return (
+	const TableTrumpSelectionControls = () => (
 		<div className="flex flex-col items-center justify-center gap-4">
 			<Button
 				onClick={() => {
@@ -43,16 +58,25 @@ const TableTrumpSelectionPlayerPanel = () => {
 			</Button>
 		</div>
 	);
+
+
+	return (
+		<TrumpSelectionPlayerPanel
+			cards={cards}
+			controls={<TableTrumpSelectionControls />}
+		/>
+	);
 }
 
 interface FreeTrumpSelectionPlayerPanelProps {
 	forbiddenSuit: Suit;
+	cards: Card[];
 	skippable: boolean;
 	iconClassName?: string;
 }
 
 
-const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, skippable = true, iconClassName = "" }: FreeTrumpSelectionPlayerPanelProps) => {
+const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, cards, skippable = true, iconClassName = "" }: FreeTrumpSelectionPlayerPanelProps) => {
 	const gameClient = useGameClient();
 
 	const SuitIcon = ({ suit }: { suit: Suit }) => {
@@ -83,7 +107,7 @@ const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, skippable = true, iconCl
 		);
 	}
 
-	return (
+	const FreeTrumpSelectionControls = () => (
 		<div className="flex flex-col items-center justify-center gap-4">
 			<div>
 				<div className="flex justify-center items-center gap-2">
@@ -94,17 +118,23 @@ const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, skippable = true, iconCl
 					))}
 				</div>
 			</div>
-			{skippable && (
-				<Button
-					onClick={() => {
-						gameClient.selectTrump(null);
-					}}
-					variant="secondary"
-				>
-					Skip
-				</Button>
-			)}
+			<Button
+				onClick={() => {
+					gameClient.selectTrump(null);
+				}}
+				variant="secondary"
+				disabled={!skippable}
+			>
+				Skip
+			</Button>
 		</div>
+	);
+
+	return (
+		<TrumpSelectionPlayerPanel
+			cards={cards}
+			controls={<FreeTrumpSelectionControls />}
+		/>
 	);
 }
 
@@ -144,13 +174,11 @@ const PlayerPanelContent = () => {
 
 	switch (handState) {
 		case HandStage.TableTrumpSelection:
-			return <TableTrumpSelectionPlayerPanel />;
+			return <TableTrumpSelectionPlayerPanel cards={cards!} />;
 		case HandStage.FreeTrumpSelection:
-			return <FreeTrumpSelectionPlayerPanel forbiddenSuit={(hand as TableTrumpSelectionHandState).tableTrumpCard.suit} skippable={skippable} />;
+			return <FreeTrumpSelectionPlayerPanel forbiddenSuit={(hand as TableTrumpSelectionHandState).tableTrumpCard.suit} cards={cards!} skippable={skippable} />;
 		case HandStage.HandInProgress:
 			return <PlayerCardsPanel cards={cards!} />;
-		case HandStage.HandFinished:
-			return <PlayerCardsPanel cards={myCards} />;
 		default:
 			return <div>Invalid hand state...</div>;
 	}
