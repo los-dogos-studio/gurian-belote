@@ -46,16 +46,11 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) handleWs(w http.ResponseWriter, r *http.Request) {
-	if r.Body == nil {
-		// TODO
-		return
-	}
-	defer r.Body.Close() // TODO: Remember why
 	log.Println("New connection from:", r.RemoteAddr)
 
 	userId := r.URL.Query().Get("userId")
 	if userId == "" {
-		// TODO
+		http.Error(w, "userId is required", http.StatusBadRequest)
 		return
 	}
 
@@ -70,7 +65,8 @@ func (s *Server) handleWs(w http.ResponseWriter, r *http.Request) {
 
 	ws, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		// TODO
+		log.Println("Failed to upgrade connection:", err)
+		http.Error(w, "Failed to upgrade connection", http.StatusInternalServerError)
 		return
 	}
 
