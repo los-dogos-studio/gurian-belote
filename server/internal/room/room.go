@@ -1,25 +1,31 @@
-package serverroom
+package room
 
 import (
+	"encoding/json"
 	"errors"
+	"log"
 	"math/rand/v2"
 
 	"github.com/los-dogos-studio/gurian-belote/game"
-	"github.com/los-dogos-studio/gurian-belote/server/internal/serverroom/gamecmd"
+	"github.com/los-dogos-studio/gurian-belote/server/internal/room/gamecmd"
 )
 
 type Room struct {
-	Id string
+	Id    string
+	Game  game.BeloteGame
+	Users map[string]UserData
 
-	Game game.BeloteGame
-
-	Users   map[string]UserData
 	started bool
+}
+
+type messageSender interface {
+	SendMessage(msg []byte) error
 }
 
 type UserData struct {
 	playerId game.PlayerId
 	team     game.TeamId
+	conn     messageSender
 }
 
 var (
@@ -38,7 +44,7 @@ func NewRoom(id string) *Room {
 	}
 }
 
-func (r *Room) Join(userId string) error {
+func (r *Room) Join(userId string, conn messageSender) error {
 	if _, ok := r.Users[userId]; ok {
 		return nil
 	}
@@ -52,7 +58,9 @@ func (r *Room) Join(userId string) error {
 	}
 
 	r.Users[userId] = UserData{
-		team: game.Team1,
+		playerId: game.NoPlayerId,
+		team:     game.Team1,
+		conn:     conn,
 	}
 
 	return nil
@@ -68,7 +76,9 @@ func (r *Room) ChooseTeam(userId string, team game.TeamId) error {
 	}
 
 	r.Users[userId] = UserData{
-		team: team,
+		playerId: r.Users[userId].playerId,
+		team:     team,
+		conn:     r.Users[userId].conn,
 	}
 
 	return nil
@@ -90,6 +100,25 @@ func (r *Room) StartGame() error {
 
 	r.Game.Start()
 	return nil
+}
+
+func (r *Room) BroadcastState() {
+	for userId, user := range r.Users {
+		userState, err := r.DumpUserState(userId)
+		if err != nil {
+			log.Println("Error dumping user state:", err)
+			continue
+		}
+
+		var userStateJson []byte
+		userStateJson, err = json.Marshal(userState)
+		if err != nil {
+			log.Println("Error marshalling user state to JSON:", err)
+			continue
+		}
+
+		go user.conn.SendMessage(userStateJson)
+	}
 }
 
 func (r *Room) assignPlayerIds() error {

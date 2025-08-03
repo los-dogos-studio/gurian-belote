@@ -31,7 +31,7 @@ const (
 type PlayerId int
 
 const (
-	NoId PlayerId = iota
+	NoPlayerId PlayerId = iota
 	Player1
 	Player2
 	Player3
