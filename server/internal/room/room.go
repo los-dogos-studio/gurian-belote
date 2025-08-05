@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"math/rand/v2"
+	"sync"
 
 	"github.com/los-dogos-studio/gurian-belote/game"
 	"github.com/los-dogos-studio/gurian-belote/server/internal/room/gamecmd"
@@ -16,6 +17,8 @@ type Room struct {
 	Users map[string]UserData
 
 	started bool
+
+	mu sync.Mutex
 }
 
 type messageSender interface {
@@ -41,10 +44,14 @@ func NewRoom(id string) *Room {
 		Game:    game.NewBeloteGame(),
 		Users:   make(map[string]UserData),
 		started: false,
+		mu:      sync.Mutex{},
 	}
 }
 
 func (r *Room) Join(userId string, conn messageSender) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if _, ok := r.Users[userId]; ok {
 		return nil
 	}
@@ -67,6 +74,9 @@ func (r *Room) Join(userId string, conn messageSender) error {
 }
 
 func (r *Room) ChooseTeam(userId string, team game.TeamId) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if _, ok := r.Users[userId]; !ok {
 		return ErrPlayerNotFound
 	}
@@ -85,10 +95,16 @@ func (r *Room) ChooseTeam(userId string, team game.TeamId) error {
 }
 
 func (r *Room) PlayTurn(userId string, gameCmd gamecmd.PlayableCmd) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	return gameCmd.PlayTurnAs(r.Users[userId].playerId, &r.Game)
 }
 
 func (r *Room) StartGame() error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if r.started {
 		return ErrGameAlreadyStarted
 	}
@@ -103,6 +119,9 @@ func (r *Room) StartGame() error {
 }
 
 func (r *Room) BroadcastState() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	for userId, user := range r.Users {
 		userState, err := r.DumpUserState(userId)
 		if err != nil {
