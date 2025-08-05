@@ -2,22 +2,26 @@ package room
 
 import (
 	"strconv"
-	"sync/atomic"
+	"sync"
 )
 
 type RoomManager struct {
 	rooms map[string]*Room
 	idGen *RoomIdGenerator
+
+	mu sync.Mutex
 }
 
 func NewRoomManager() RoomManager {
 	return RoomManager{
 		rooms: make(map[string]*Room),
-		idGen: NewRoomIdGenerator(),
+		idGen: NewRoomIdGenerator(1),
 	}
 }
 
 func (m *RoomManager) CreateRoom() *Room {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	roomId := m.idGen.getNextRoomId()
 	room := NewRoom(strconv.Itoa(roomId))
 	m.rooms[room.Id] = room
@@ -25,24 +29,30 @@ func (m *RoomManager) CreateRoom() *Room {
 }
 
 func (m *RoomManager) GetRoom(roomId string) (*Room, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	room, exists := m.rooms[roomId]
 	return room, exists
 }
 
 func (m *RoomManager) DeleteRoom(roomId string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	delete(m.rooms, roomId)
 }
 
 type RoomIdGenerator struct {
-	roomIdCounter atomic.Int32
+	roomIdCounter int
 }
 
-func NewRoomIdGenerator() *RoomIdGenerator {
+func NewRoomIdGenerator(startingId int) *RoomIdGenerator {
 	return &RoomIdGenerator{
-		roomIdCounter: atomic.Int32{},
+		roomIdCounter: startingId,
 	}
 }
 
 func (g *RoomIdGenerator) getNextRoomId() int {
-	return int(g.roomIdCounter.Add(1))
+	id := g.roomIdCounter
+	g.roomIdCounter++
+	return id
 }
