@@ -23,6 +23,7 @@ type TableTrumpSelectionHandDump struct {
 	TableTrumpCard  game.Card              `json:"tableTrumpCard"`
 	SelectionStatus map[game.PlayerId]bool `json:"selectionStatus"`
 	StartingPlayer  game.PlayerId          `json:"startingPlayer"`
+	PreviousTrick   *TrickDump             `json:"previousTrick,omitempty"`
 }
 
 func (d *TableTrumpSelectionHandDump) GetState() game.HandState {
@@ -38,6 +39,7 @@ type FreeTrumpSelectionHandDump struct {
 	TableTrumpCard  game.Card              `json:"tableTrumpCard"`
 	SelectionStatus map[game.PlayerId]bool `json:"selectionStatus"`
 	StartingPlayer  game.PlayerId          `json:"startingPlayer"`
+	PreviousTrick   *TrickDump             `json:"previousTrick,omitempty"`
 }
 
 func (d *FreeTrumpSelectionHandDump) GetState() game.HandState {
@@ -49,10 +51,11 @@ func (d *FreeTrumpSelectionHandDump) GetStartingPlayer() game.PlayerId {
 }
 
 type InProgressHandDump struct {
-	State  game.HandState      `json:"state"`
-	Trump  game.Suit           `json:"trump"`
-	Trick  TrickDump           `json:"trick"`
-	Totals map[game.TeamId]int `json:"totals"`
+	State         game.HandState      `json:"state"`
+	Trump         game.Suit           `json:"trump"`
+	Trick         TrickDump           `json:"trick"`
+	PreviousTrick *TrickDump          `json:"previousTrick,omitempty"`
+	Totals        map[game.TeamId]int `json:"totals"`
 }
 
 func (d *InProgressHandDump) GetState() game.HandState {
@@ -198,6 +201,7 @@ func dumpTableTrumpSelectionHand(hand *game.Hand) *TableTrumpSelectionHandDump {
 		TableTrumpCard:  hand.TableTrumpCard,
 		SelectionStatus: hand.TableTrumpSelectionStatus,
 		StartingPlayer:  hand.StartingPlayer,
+		PreviousTrick:   dumpTrick(hand.PreviousTrick),
 	}
 }
 
@@ -207,6 +211,7 @@ func dumpFreeTrumpSelectionHand(hand *game.Hand) *FreeTrumpSelectionHandDump {
 		TableTrumpCard:  hand.TableTrumpCard,
 		SelectionStatus: hand.FreeTrumpSelectionStatus,
 		StartingPlayer:  hand.StartingPlayer,
+		PreviousTrick:   dumpTrick(hand.PreviousTrick),
 	}
 }
 
@@ -217,15 +222,20 @@ func dumpInProgressHand(hand *game.Hand) *InProgressHandDump {
 	}
 
 	return &InProgressHandDump{
-		State:  hand.GetState(),
-		Trump:  hand.GetTrump(),
-		Trick:  dumpTrick(trick),
-		Totals: hand.Totals,
+		State:         hand.GetState(),
+		Trump:         hand.GetTrump(),
+		Trick:         *dumpTrick(trick),
+		PreviousTrick: dumpTrick(hand.PreviousTrick),
+		Totals:        hand.Totals,
 	}
 }
 
-func dumpTrick(trick *game.Trick) TrickDump {
-	return TrickDump{
+func dumpTrick(trick *game.Trick) *TrickDump {
+	if trick == nil {
+		return nil
+	}
+
+	return &TrickDump{
 		PlayedCards:    trick.GetTableCards(),
 		StartingPlayer: trick.StartingPlayer,
 	}

@@ -7,6 +7,7 @@ import (
 type Hand struct {
 	State          HandState
 	CurrentTrick   *Trick
+	PreviousTrick  *Trick
 	StartingPlayer PlayerId
 	Totals         map[TeamId]int
 	PlayerCards    map[PlayerId]map[Card]bool
@@ -37,14 +38,15 @@ func NewHand(startingPlayer PlayerId, dealer Dealer) *Hand {
 	hand := &Hand{
 		State:                     TableTrumpSelection,
 		CurrentTrick:              nil,
+		PreviousTrick:             nil,
 		StartingPlayer:            startingPlayer,
 		Totals:                    nil,
 		PlayerCards:               makePlayerCards(),
-		dealer:                    dealer,
 		TableTrumpCard:            Card{},
 		TableTrumpSelectionStatus: map[PlayerId]bool{},
 		FreeTrumpSelectionStatus:  map[PlayerId]bool{},
 		Trump:                     Spades,
+		dealer:                    dealer,
 	}
 
 	hand.Totals = map[TeamId]int{}
@@ -203,6 +205,7 @@ func (h *Hand) handleTrickResult(trickResult *TrickResult) {
 		return
 	}
 
+	h.PreviousTrick = h.CurrentTrick
 	h.CurrentTrick = NewTrick(trickResult.WinnerPlayer, h.Trump)
 }
 
