@@ -1,6 +1,8 @@
 package game
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Hand struct {
 	State          HandState
@@ -208,11 +210,12 @@ func (h *Hand) checkEndCondition() bool {
 }
 
 func (h *Hand) getCurrentTrumpSelectionTurn(selections map[PlayerId]bool) (PlayerId, error) {
+	playerId := h.StartingPlayer
 	for i := 0; i < NUM_PLAYERS; i++ {
-		player := Player1 + (h.StartingPlayer-Player1+PlayerId(i))%NUM_PLAYERS
-		if !selections[player] {
-			return player, nil
+		if !selections[playerId] {
+			return playerId, nil
 		}
+		playerId = playerId.GetNextPlayerId()
 	}
 	return Player1, fmt.Errorf("all players have selected")
 }
@@ -262,5 +265,5 @@ func makePlayerCards() map[PlayerId]map[Card]bool {
 }
 
 func (h *Hand) getLastPlayer() PlayerId {
-	return Player1 + (h.StartingPlayer-Player1+NUM_PLAYERS-1)%NUM_PLAYERS
+	return h.StartingPlayer.GetPreviousPlayerId()
 }
