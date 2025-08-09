@@ -57,6 +57,7 @@ func NewHand(startingPlayer PlayerId, dealer Dealer) *Hand {
 	}
 
 	if tableTrumpCard.Rank == Jack {
+		hand.PlayerCards[hand.getLastPlayer()][tableTrumpCard] = true
 		hand.handleTrumpSelected(tableTrumpCard.Suit)
 		return hand
 	}
