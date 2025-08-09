@@ -42,6 +42,10 @@ func (c *UserConn) Serve() {
 		}
 
 		cmd, err := ParseCmd(msg)
+		if err != nil {
+			// TODO: handle error
+			continue
+		}
 
 		cmdContext := CmdContext{
 			user:        c,
