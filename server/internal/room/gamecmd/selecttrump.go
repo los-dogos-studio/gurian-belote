@@ -7,13 +7,13 @@ import (
 )
 
 type SelectTrumpCommand struct {
-	Trump *game.Suit
+	Suit *game.Suit
 }
 
 const SelectTrumpCmdType = "selectTrump"
 
 func (c *SelectTrumpCommand) PlayTurnAs(playerId game.PlayerId, game *game.BeloteGame) error {
-	return game.SelectTrump(playerId, c.Trump)
+	return game.SelectTrump(playerId, c.Suit)
 }
 
 func newSelectTrumpCommand(cmdBytes []byte) (*SelectTrumpCommand, error) {

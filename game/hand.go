@@ -1,10 +1,13 @@
 package game
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Hand struct {
 	State          HandState
 	CurrentTrick   *Trick
+	PreviousTrick  *Trick
 	StartingPlayer PlayerId
 	Totals         map[TeamId]int
 	PlayerCards    map[PlayerId]map[Card]bool
@@ -35,14 +38,15 @@ func NewHand(startingPlayer PlayerId, dealer Dealer) *Hand {
 	hand := &Hand{
 		State:                     TableTrumpSelection,
 		CurrentTrick:              nil,
+		PreviousTrick:             nil,
 		StartingPlayer:            startingPlayer,
 		Totals:                    nil,
 		PlayerCards:               makePlayerCards(),
-		dealer:                    dealer,
 		TableTrumpCard:            Card{},
 		TableTrumpSelectionStatus: map[PlayerId]bool{},
 		FreeTrumpSelectionStatus:  map[PlayerId]bool{},
 		Trump:                     Spades,
+		dealer:                    dealer,
 	}
 
 	hand.Totals = map[TeamId]int{}
@@ -55,6 +59,7 @@ func NewHand(startingPlayer PlayerId, dealer Dealer) *Hand {
 	}
 
 	if tableTrumpCard.Rank == Jack {
+		hand.PlayerCards[hand.getLastPlayer()][tableTrumpCard] = true
 		hand.handleTrumpSelected(tableTrumpCard.Suit)
 		return hand
 	}
@@ -117,21 +122,21 @@ func (h *Hand) SelectTrump(player PlayerId, suit *Suit) error {
 		return err
 	}
 
-	if *suit == h.TableTrumpCard.Suit {
-		return fmt.Errorf("trump suit cannot be the same as table trump suit")
-	}
-
 	if player == h.getLastPlayer() && suit == nil {
 		return fmt.Errorf("final player must select a trump suit")
 	}
 
-	if suit != nil {
-		h.PlayerCards[player][h.TableTrumpCard] = true
-		h.handleTrumpSelected(*suit)
+	if suit == nil {
+		h.FreeTrumpSelectionStatus[player] = true
 		return nil
 	}
 
-	h.FreeTrumpSelectionStatus[player] = true
+	if *suit == h.TableTrumpCard.Suit {
+		return fmt.Errorf("trump suit cannot be the same as table trump suit")
+	}
+
+	h.PlayerCards[player][h.TableTrumpCard] = true
+	h.handleTrumpSelected(*suit)
 	return nil
 }
 
@@ -200,6 +205,7 @@ func (h *Hand) handleTrickResult(trickResult *TrickResult) {
 		return
 	}
 
+	h.PreviousTrick = h.CurrentTrick
 	h.CurrentTrick = NewTrick(trickResult.WinnerPlayer, h.Trump)
 }
 
@@ -208,11 +214,12 @@ func (h *Hand) checkEndCondition() bool {
 }
 
 func (h *Hand) getCurrentTrumpSelectionTurn(selections map[PlayerId]bool) (PlayerId, error) {
+	playerId := h.StartingPlayer
 	for i := 0; i < NUM_PLAYERS; i++ {
-		player := Player1 + (h.StartingPlayer-Player1+PlayerId(i))%NUM_PLAYERS
-		if !selections[player] {
-			return player, nil
+		if !selections[playerId] {
+			return playerId, nil
 		}
+		playerId = playerId.GetNextPlayerId()
 	}
 	return Player1, fmt.Errorf("all players have selected")
 }
@@ -262,5 +269,5 @@ func makePlayerCards() map[PlayerId]map[Card]bool {
 }
 
 func (h *Hand) getLastPlayer() PlayerId {
-	return Player1 + (h.StartingPlayer-Player1+NUM_PLAYERS-1)%NUM_PLAYERS
+	return h.StartingPlayer.GetPreviousPlayerId()
 }

@@ -1,4 +1,4 @@
-package serverroom
+package room
 
 import (
 	"errors"
@@ -6,7 +6,6 @@ import (
 	"github.com/los-dogos-studio/gurian-belote/game"
 )
 
-// TODO: should this exist in game package?
 type GameState string
 
 type TrickDump struct {
@@ -24,6 +23,7 @@ type TableTrumpSelectionHandDump struct {
 	TableTrumpCard  game.Card              `json:"tableTrumpCard"`
 	SelectionStatus map[game.PlayerId]bool `json:"selectionStatus"`
 	StartingPlayer  game.PlayerId          `json:"startingPlayer"`
+	PreviousTrick   *TrickDump             `json:"previousTrick,omitempty"`
 }
 
 func (d *TableTrumpSelectionHandDump) GetState() game.HandState {
@@ -39,6 +39,7 @@ type FreeTrumpSelectionHandDump struct {
 	TableTrumpCard  game.Card              `json:"tableTrumpCard"`
 	SelectionStatus map[game.PlayerId]bool `json:"selectionStatus"`
 	StartingPlayer  game.PlayerId          `json:"startingPlayer"`
+	PreviousTrick   *TrickDump             `json:"previousTrick,omitempty"`
 }
 
 func (d *FreeTrumpSelectionHandDump) GetState() game.HandState {
@@ -50,10 +51,11 @@ func (d *FreeTrumpSelectionHandDump) GetStartingPlayer() game.PlayerId {
 }
 
 type InProgressHandDump struct {
-	State  game.HandState      `json:"state"`
-	Trump  game.Suit           `json:"trump"`
-	Trick  TrickDump           `json:"trick"`
-	Totals map[game.TeamId]int `json:"totals"`
+	State         game.HandState      `json:"state"`
+	Trump         game.Suit           `json:"trump"`
+	Trick         TrickDump           `json:"trick"`
+	PreviousTrick *TrickDump          `json:"previousTrick,omitempty"`
+	Totals        map[game.TeamId]int `json:"totals"`
 }
 
 func (d *InProgressHandDump) GetState() game.HandState {
@@ -84,77 +86,79 @@ var (
 	ErrUserNotInRoom = errors.New("user not in room")
 )
 
-func DumpState(room *Room) StateDump {
+func (r *Room) DumpState() StateDump {
 	return StateDump{
-		RoomId:    room.Id,
-		Players:   dumpPlayersMap(room),
-		Teams:     dumpTeams(room),
-		Hand:      dumpHand(room),
-		GameState: dumpGameState(room),
-		Scores:    dumpScore(room),
+		RoomId:    r.Id,
+		Players:   r.dumpPlayersMap(),
+		Teams:     r.dumpTeams(),
+		Hand:      r.dumpHand(),
+		GameState: r.dumpGameState(),
+		Scores:    r.dumpScore(),
 	}
 }
 
-func DumpUserState(room *Room, userId string) (UserStateDump, error) {
-	_, ok := room.Users[userId]
+func (r *Room) DumpUserState(userId string) (UserStateDump, error) {
+	_, ok := r.Users[userId]
 	if !ok {
 		return UserStateDump{}, ErrUserNotInRoom
 	}
 
-	state := DumpState(room)
-	userCards := dumpUserCards(room, userId)
+	state := r.DumpState()
+	userCards := r.dumpUserCards(userId)
 
 	return UserStateDump{
 		GameState: state,
 		UserId:    userId,
-		PlayerId:  room.Users[userId].playerId,
+		PlayerId:  r.Users[userId].playerId,
 		UserCards: userCards,
 	}, nil
 }
 
-func dumpUserCards(room *Room, userId string) []game.Card {
-	user, ok := room.Users[userId]
+func (r *Room) dumpUserCards(userId string) []game.Card {
+	user, ok := r.Users[userId]
 	if !ok {
 		return nil
 	}
 
-	hand := room.Game.GetHand()
+	hand := r.Game.GetHand()
 	if hand == nil {
 		return nil
 	}
 
 	cards := hand.GetPlayerCards(user.playerId)
 	result := make([]game.Card, 0, len(cards))
-	for card := range cards {
-		result = append(result, card)
+	for card, exists := range cards {
+		if exists {
+			result = append(result, card)
+		}
 	}
 
 	return result
 }
 
-func dumpPlayersMap(room *Room) map[game.PlayerId]string {
+func (r *Room) dumpPlayersMap() map[game.PlayerId]string {
 	players := make(map[game.PlayerId]string)
-	for id, user := range room.Users {
+	for id, user := range r.Users {
 		players[user.playerId] = id
 	}
 	return players
 }
 
-func dumpTeams(room *Room) map[game.TeamId][]string {
-	if room.Users == nil {
+func (r *Room) dumpTeams() map[game.TeamId][]string {
+	if r.Users == nil {
 		return nil
 	}
 
 	teams := make(map[game.TeamId][]string)
 
-	for id, user := range room.Users {
+	for id, user := range r.Users {
 		teams[user.team] = append(teams[user.team], id)
 	}
 	return teams
 }
 
-func dumpHand(room *Room) HandDump {
-	hand := room.Game.GetHand()
+func (r *Room) dumpHand() HandDump {
+	hand := r.Game.GetHand()
 	if hand == nil {
 		return nil
 	}
@@ -172,12 +176,32 @@ func dumpHand(room *Room) HandDump {
 	return nil
 }
 
+func (r *Room) dumpGameState() game.GameState {
+	return r.Game.GetState()
+}
+
+func (r *Room) dumpHandState() game.HandState {
+	if r.Game.GetHand() == nil {
+		return game.HandFinished
+	}
+	return r.Game.GetHand().GetState()
+}
+
+func (r *Room) dumpScore() map[game.TeamId]int {
+	scores := make(map[game.TeamId]int)
+	for team, score := range r.Game.GetScores() {
+		scores[team] = score
+	}
+	return scores
+}
+
 func dumpTableTrumpSelectionHand(hand *game.Hand) *TableTrumpSelectionHandDump {
 	return &TableTrumpSelectionHandDump{
 		State:           hand.GetState(),
 		TableTrumpCard:  hand.TableTrumpCard,
 		SelectionStatus: hand.TableTrumpSelectionStatus,
 		StartingPlayer:  hand.StartingPlayer,
+		PreviousTrick:   dumpTrick(hand.PreviousTrick),
 	}
 }
 
@@ -187,6 +211,7 @@ func dumpFreeTrumpSelectionHand(hand *game.Hand) *FreeTrumpSelectionHandDump {
 		TableTrumpCard:  hand.TableTrumpCard,
 		SelectionStatus: hand.FreeTrumpSelectionStatus,
 		StartingPlayer:  hand.StartingPlayer,
+		PreviousTrick:   dumpTrick(hand.PreviousTrick),
 	}
 }
 
@@ -197,35 +222,21 @@ func dumpInProgressHand(hand *game.Hand) *InProgressHandDump {
 	}
 
 	return &InProgressHandDump{
-		State:  hand.GetState(),
-		Trump:  hand.GetTrump(),
-		Trick:  dumpTrick(trick),
-		Totals: hand.Totals,
+		State:         hand.GetState(),
+		Trump:         hand.GetTrump(),
+		Trick:         *dumpTrick(trick),
+		PreviousTrick: dumpTrick(hand.PreviousTrick),
+		Totals:        hand.Totals,
 	}
 }
 
-func dumpTrick(trick *game.Trick) TrickDump {
-	return TrickDump{
+func dumpTrick(trick *game.Trick) *TrickDump {
+	if trick == nil {
+		return nil
+	}
+
+	return &TrickDump{
 		PlayedCards:    trick.GetTableCards(),
 		StartingPlayer: trick.StartingPlayer,
 	}
-}
-
-func dumpHandState(room *Room) game.HandState {
-	if room.Game.GetHand() == nil {
-		return game.HandFinished
-	}
-	return room.Game.GetHand().GetState()
-}
-
-func dumpGameState(room *Room) game.GameState {
-	return room.Game.GetState()
-}
-
-func dumpScore(room *Room) map[game.TeamId]int {
-	scores := make(map[game.TeamId]int)
-	for team, score := range room.Game.GetScores() {
-		scores[team] = score
-	}
-	return scores
 }

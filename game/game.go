@@ -31,7 +31,7 @@ const (
 type PlayerId int
 
 const (
-	NoId PlayerId = iota
+	NoPlayerId PlayerId = iota
 	Player1
 	Player2
 	Player3
@@ -62,6 +62,14 @@ func (p PlayerId) GetTeammateId() PlayerId {
 		return Player4
 	}
 	return Player2
+}
+
+func (p PlayerId) GetNextPlayerId() PlayerId {
+	return (p-1+1)%4 + 1
+}
+
+func (p PlayerId) GetPreviousPlayerId() PlayerId {
+	return (p-1+3)%4 + 1
 }
 
 func NewBeloteGame() BeloteGame {

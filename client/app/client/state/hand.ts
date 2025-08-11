@@ -4,7 +4,7 @@ import type { TeamId } from "../team-id";
 import "reflect-metadata";
 import { stringMapToIntEnumMap } from "./enum-map-utils";
 import { Transform, Type } from "class-transformer";
-import { IsEnum, ValidateNested } from "class-validator";
+import { IsEnum, IsOptional, ValidateNested } from "class-validator";
 import { Trick } from "./trick";
 
 export enum HandStage {
@@ -18,8 +18,14 @@ export abstract class HandState {
 	@IsEnum(HandStage)
 	state: HandStage;
 
-	constructor(state: HandStage) {
+	@Type(() => Trick)
+	@IsOptional()
+	@ValidateNested()
+	previousTrick?: Trick;
+
+	constructor(state: HandStage, previousTrick?: Trick) {
 		this.state = state;
+		this.previousTrick = previousTrick;
 	}
 
 	abstract getCurrentTurn(): PlayerId;

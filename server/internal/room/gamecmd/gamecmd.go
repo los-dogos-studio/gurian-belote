@@ -3,7 +3,6 @@ package gamecmd
 import (
 	"encoding/json"
 	"errors"
-	"log"
 
 	"github.com/los-dogos-studio/gurian-belote/game"
 )
@@ -14,6 +13,7 @@ type GameCmd struct {
 
 type GameCmdType string
 
+// TODO: outside of this package?
 type PlayableCmd interface {
 	PlayTurnAs(playerId game.PlayerId, game *game.BeloteGame) error
 }
@@ -29,7 +29,6 @@ func NewGameCmdFromJson(data json.RawMessage) (PlayableCmd, error) {
 		return nil, err
 	}
 
-	log.Printf("Game command: %s", gameCmd.Command)
 	switch gameCmd.Command {
 	case AcceptTrumpCmdType:
 		return newAcceptTrumpCommandFromJson(data)
