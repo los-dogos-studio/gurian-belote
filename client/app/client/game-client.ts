@@ -56,8 +56,9 @@ export class GameClient {
 	public disconnect() {
 		if (this.ws) {
 			this.ws.close();
-			this.ws = null;
 		}
+		this.ws = null;
+		this.listeners = [];
 	}
 
 	public joinRoom(roomId: string): void {

@@ -29,6 +29,8 @@ export abstract class HandState {
 	}
 
 	abstract getCurrentTurn(): PlayerId;
+
+	abstract getPlayableCards(playerCards: Card[]): Card[];
 }
 
 export class TableTrumpSelectionHandState extends HandState {
@@ -56,7 +58,7 @@ export class TableTrumpSelectionHandState extends HandState {
 		this.selectionStatus = selectionStatus;
 	}
 
-    getCurrentTurn(): PlayerId {
+	getCurrentTurn(): PlayerId {
 		let result = this.startingPlayer;
 		for (const [playerId, selected] of this.selectionStatus.entries()) {
 			if (selected) {
@@ -64,7 +66,11 @@ export class TableTrumpSelectionHandState extends HandState {
 			}
 		}
 		return result;
-    }
+	}
+
+	getPlayableCards(_playerCards: Card[]): Card[] {
+		return [];
+	}
 }
 
 // TODO: DRY this code
@@ -92,7 +98,7 @@ export class FreeTrumpSelectionHandState extends HandState {
 		this.selectionStatus = selectionStatus;
 	}
 
-    getCurrentTurn(): PlayerId {
+	getCurrentTurn(): PlayerId {
 		let result = this.startingPlayer;
 		for (const [playerId, selected] of this.selectionStatus.entries()) {
 			if (selected) {
@@ -100,7 +106,11 @@ export class FreeTrumpSelectionHandState extends HandState {
 			}
 		}
 		return result;
-    }
+	}
+
+	getPlayableCards(_playerCards: Card[]): Card[] {
+		return [];
+	}
 }
 
 export class InProgressHandState extends HandState {
@@ -127,13 +137,41 @@ export class InProgressHandState extends HandState {
 		this.totals = totals;
 	}
 
-    getCurrentTurn(): PlayerId {
+	getCurrentTurn(): PlayerId {
 		let result = this.trick.startingPlayer;
 		for (let i = 0; i < this.trick.playedCards.size; i++) {
 			result = getNextPlayerId(result);
 		}
 		return result;
-    }
+	}
+
+	getPlayableCards(playerCards: Card[]): Card[] {
+		const trumpSuit = this.trump;
+		const trick = this.trick;
+
+		if (trick.playedCards.size === 0) return [...playerCards];
+
+		const firstCard = trick.playedCards.get(trick.startingPlayer)!;
+		const leadSuit = firstCard.suit;
+
+		const cardsOfLeadSuit = playerCards.filter(card => card.suit === leadSuit);
+
+		if (cardsOfLeadSuit.length > 0) return cardsOfLeadSuit;
+
+		const playerTrumpCards = playerCards.filter(card => card.suit === trumpSuit);
+		const trumpPlayed = Array.from(trick.playedCards.values()).some(card => card.suit === trumpSuit);
+
+		if (trumpPlayed && playerTrumpCards.length > 0) {
+			const highestTrump = Array.from(trick.playedCards.values())
+				.filter(card => card.suit === trumpSuit)
+				.reduce((highest, current) => current.compare(highest, trumpSuit) > 0 ? current : highest);
+
+			const higherTrumpCards = playerTrumpCards.filter(card => card.compare(highestTrump, trumpSuit) > 0);
+			return higherTrumpCards.length > 0 ? higherTrumpCards : playerTrumpCards;
+		}
+
+		return playerTrumpCards.length > 0 ? playerTrumpCards : [...playerCards];
+	}
 }
 
 export type HandStateType =

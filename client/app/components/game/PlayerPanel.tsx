@@ -1,4 +1,4 @@
-import { Suit, type Card } from "~/client/card";
+import { Card, Rank, Suit } from "~/client/card";
 import Panel from "../Panel";
 import Button from "../Button";
 import CardFace from "./CardFace";
@@ -10,10 +10,13 @@ import { LuClub, LuDiamond, LuHeart, LuSpade } from "react-icons/lu";
 
 interface TableTrumpSelectionPlayerPanelProps {
 	cards: Card[];
+	disabled: boolean;
 }
 
 interface PlayerCardsPanelProps {
 	cards: Card[];
+	playableCards: Card[];
+	disabled: boolean;
 }
 
 interface TrumpSelectionPlayerPanelProps {
@@ -26,7 +29,7 @@ const TrumpSelectionPlayerPanel = ({ cards, controls }: TrumpSelectionPlayerPane
 		<div className="flex items-center justify-center gap-8">
 			<div className="flex justify-center items-center -space-x-4">
 				{cards.map((card, index) => (
-					<CardFace key={index} card={card} hover />
+					<CardFace key={index} card={card} className='brightness-70 cursor-not-allowed pointer-events-none'/>
 				))}
 			</div>
 			{controls}
@@ -35,7 +38,7 @@ const TrumpSelectionPlayerPanel = ({ cards, controls }: TrumpSelectionPlayerPane
 
 }
 
-const TableTrumpSelectionPlayerPanel = ({ cards }: TableTrumpSelectionPlayerPanelProps) => {
+const TableTrumpSelectionPlayerPanel = ({ cards, disabled }: TableTrumpSelectionPlayerPanelProps) => {
 	const gameClient = useGameClient();
 
 	const TableTrumpSelectionControls = () => (
@@ -45,6 +48,7 @@ const TableTrumpSelectionPlayerPanel = ({ cards }: TableTrumpSelectionPlayerPane
 					gameClient.acceptTrump(true);
 				}}
 				variant="secondary"
+				disabled={disabled}
 			>
 				Accept Table Trump
 			</Button>
@@ -53,6 +57,7 @@ const TableTrumpSelectionPlayerPanel = ({ cards }: TableTrumpSelectionPlayerPane
 					gameClient.acceptTrump(false);
 				}}
 				variant="secondary"
+				disabled={disabled}
 			>
 				Decline Table Trump
 			</Button>
@@ -71,12 +76,13 @@ const TableTrumpSelectionPlayerPanel = ({ cards }: TableTrumpSelectionPlayerPane
 interface FreeTrumpSelectionPlayerPanelProps {
 	forbiddenSuit: Suit;
 	cards: Card[];
+	disabled: boolean;
 	skippable: boolean;
 	iconClassName?: string;
 }
 
 
-const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, cards, skippable = true, iconClassName = "" }: FreeTrumpSelectionPlayerPanelProps) => {
+const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, cards, skippable = true, iconClassName = "", disabled = false }: FreeTrumpSelectionPlayerPanelProps) => {
 	const gameClient = useGameClient();
 
 	const SuitIcon = ({ suit }: { suit: Suit }) => {
@@ -94,12 +100,13 @@ const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, cards, skippable = true,
 		}
 	}
 
-	const TrumpSuitSelectionButton = ({ suit }: { suit: Suit }) => {
+	const TrumpSuitSelectionButton = ({ suit, disabled }: { suit: Suit, disabled: boolean }) => {
 		return (
 			<Button
 				onClick={() => {
 					gameClient.selectTrump(suit);
 				}}
+				disabled={disabled}
 				variant="secondary"
 			>
 				{<SuitIcon suit={suit} />}
@@ -113,7 +120,7 @@ const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, cards, skippable = true,
 				<div className="flex justify-center items-center gap-2">
 					{Object.values(Suit).map((suit) => (
 						suit !== forbiddenSuit && (
-							<TrumpSuitSelectionButton key={suit} suit={suit} />
+							<TrumpSuitSelectionButton key={suit} suit={suit} disabled={disabled} />
 						)
 					))}
 				</div>
@@ -123,7 +130,7 @@ const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, cards, skippable = true,
 					gameClient.selectTrump(null);
 				}}
 				variant="secondary"
-				disabled={!skippable}
+				disabled={!skippable || disabled}
 			>
 				Skip
 			</Button>
@@ -138,7 +145,7 @@ const FreeTrumpSelectionPlayerPanel = ({ forbiddenSuit, cards, skippable = true,
 	);
 }
 
-const PlayerCardsPanel = ({ cards }: PlayerCardsPanelProps) => {
+const PlayerCardsPanel = ({ cards, playableCards, disabled }: PlayerCardsPanelProps) => {
 	const gameClient = useGameClient();
 
 	const onCardClick = (card: Card) => {
@@ -147,9 +154,15 @@ const PlayerCardsPanel = ({ cards }: PlayerCardsPanelProps) => {
 
 	return (
 		<div className="flex justify-center items-center -space-x-4">
-			{cards.map((card, index) => (
-				<CardFace key={index} card={card} onClick={onCardClick} hover />
-			))}
+			{
+				cards.map((card, index) => {
+					const notPlayable = !playableCards.some((playableCard) => playableCard.equals(card));
+					const cardClassName = (disabled || notPlayable) ? 'brightness-70 cursor-not-allowed pointer-events-none' : '';
+					return (
+						<CardFace key={index} card={card} onClick={onCardClick} hover className={cardClassName}/>
+					)
+				})
+			}
 		</div>
 	);
 }
@@ -169,16 +182,24 @@ const PlayerPanelContent = () => {
 	const hand = gameState.gameState.hand;
 	const handState = hand.state;
 	const cards = gameState.userCards;
+	const currentPlayerId = gameState.gameState.hand?.getCurrentTurn();
+	const controlsDisabled = currentPlayerId !== gameState.playerId;
 
 	const skippable = true; // TODO
 
 	switch (handState) {
 		case HandStage.TableTrumpSelection:
-			return <TableTrumpSelectionPlayerPanel cards={cards!} />;
+			return <TableTrumpSelectionPlayerPanel disabled={controlsDisabled} cards={cards!} />;
 		case HandStage.FreeTrumpSelection:
-			return <FreeTrumpSelectionPlayerPanel forbiddenSuit={(hand as TableTrumpSelectionHandState).tableTrumpCard.suit} cards={cards!} skippable={skippable} />;
+			return <FreeTrumpSelectionPlayerPanel disabled={controlsDisabled} forbiddenSuit={(hand as TableTrumpSelectionHandState).tableTrumpCard.suit} cards={cards!} skippable={skippable} />;
 		case HandStage.HandInProgress:
-			return <PlayerCardsPanel cards={cards!} />;
+			return (
+				<PlayerCardsPanel 
+					disabled={controlsDisabled} 
+					cards={cards!} 
+					playableCards={hand.getPlayableCards(cards!)}
+				/>
+			)
 		default:
 			return <div>Invalid hand state...</div>;
 	}
