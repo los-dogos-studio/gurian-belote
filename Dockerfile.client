@@ -1,10 +1,10 @@
 FROM oven/bun:1-alpine AS development-dependencies-env
-COPY ./client/package.json ./client/bun.lockb /app/
+COPY ./client/package.json ./client/bun.lock /app/
 WORKDIR /app
 RUN bun install
 
 FROM oven/bun:1-alpine AS production-dependencies-env
-COPY ./client/package.json ./client/bun.lockb /app/
+COPY ./client/package.json ./client/bun.lock /app/
 WORKDIR /app
 RUN bun install --production
 
