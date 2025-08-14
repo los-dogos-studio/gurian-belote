@@ -18,13 +18,15 @@ echo "Configuration updated. Starting deployment..."
 echo "Stopping containers..."
 docker compose down
 
-echo "Starting services..."
-docker compose up -d --build
+echo "Starting services with HTTP-only nginx..."
+cp nginx-initial.conf nginx.conf
+docker compose up -d --build server nginx
 
 echo "Requesting SSL certificate..."
 docker compose run --rm certbot
 
-echo "Restarting nginx with SSL..."
+echo "Enabling SSL config..."
+cp nginx-ssl.conf nginx.conf
 docker compose restart nginx
 
 echo "SSL setup complete!"
