@@ -1,12 +1,23 @@
 version: '3.8'
 
 services:
-  client:
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: gurian-belote-server
+    restart: unless-stopped
+
+  nginx:
     build:
       context: .
       dockerfile: Dockerfile.client
     ports:
-      - "80:3000"
-      - "443:3000"
-    container_name: gurian-belote-app
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - server
+    container_name: gurian-belote-nginx
     restart: unless-stopped
