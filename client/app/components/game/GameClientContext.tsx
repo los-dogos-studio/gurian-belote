@@ -4,13 +4,15 @@ import { useGameState } from './GameStateContext';
 
 const GameClientContext = createContext<GameClient | null>(null);
 
+const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsUrl = `${protocol}//${window.location.host}/ws`;
+
 export const GameClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const clientRef = useRef(new GameClient("ws://localhost:8080/ws")); // TODO: Make this configurable
+	const clientRef = useRef(new GameClient(wsUrl));
 	const { setGameState } = useGameState();
 
-	clientRef.current.addListener(setGameState);
-
 	useEffect(() => {
+		clientRef.current.addListener(setGameState);
 		return () => {
 			clientRef.current.disconnect();
 		};
