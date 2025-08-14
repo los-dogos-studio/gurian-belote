@@ -6,8 +6,9 @@ EMAIL="${2:-your-email@example.com}"
 
 echo "Setting up SSL for domain: $DOMAIN with email: $EMAIL"
 
-# Replace placeholders in nginx.conf
-sed -i "s/__DOMAIN_NAME__/$DOMAIN/g" nginx.conf
+# Replace placeholders in nginx config files
+sed -i "s/__DOMAIN_NAME__/$DOMAIN/g" nginx-initial.conf
+sed -i "s/__DOMAIN_NAME__/$DOMAIN/g" nginx-ssl.conf
 
 # Replace placeholders in docker-compose.yml  
 sed -i "s/__DOMAIN_NAME__/$DOMAIN/g" docker-compose.yml
