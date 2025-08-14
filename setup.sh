@@ -23,8 +23,13 @@ echo "Starting services with HTTP-only nginx..."
 cp nginx-initial.conf nginx.conf
 docker compose up -d --build server nginx
 
-echo "Requesting SSL certificate..."
-docker compose run --rm certbot
+echo "Checking for existing SSL certificate..."
+if docker compose run --rm certbot certificates | grep -q "$DOMAIN"; then
+    echo "Certificate already exists for $DOMAIN, skipping creation"
+else
+    echo "Requesting SSL certificate..."
+    docker compose run --rm certbot
+fi
 
 echo "Enabling SSL config..."
 cp nginx-ssl.conf nginx.conf
