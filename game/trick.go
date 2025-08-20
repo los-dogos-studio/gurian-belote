@@ -13,6 +13,13 @@ type TrickResult struct {
 	Points       int
 }
 
+var (
+	ErrCardNotOwned                = fmt.Errorf("player does not have this card")
+	ErrMustPlayLeadSuitCard        = fmt.Errorf("player must play a card of the lead suit")
+	ErrMustPlayTrumpCard           = fmt.Errorf("player must play a trump card")
+	ErrMustPlayHigherRankTrumpCard = fmt.Errorf("player must play a higher rank trump card")
+)
+
 func NewTrick(startingPlayer PlayerId, trump Suit) *Trick {
 	return &Trick{
 		StartingPlayer: startingPlayer,
@@ -91,34 +98,35 @@ func (t *Trick) GetTableCards() map[PlayerId]Card {
 
 func (t *Trick) validateCard(card Card, playerCards map[Card]bool) error {
 	if owned, ok := playerCards[card]; !ok || !owned {
-		return fmt.Errorf("player does not have this card")
+		return ErrCardNotOwned
 	}
 
 	if len(t.Cards) == 0 {
 		return nil
 	}
 
-	originalSuit := t.getOriginalSuit()
-	if card.Suit == originalSuit {
+	leadSuit := t.getLeadSuit()
+	var requiredSuit Suit
+
+	if hasCardOfSuit(playerCards, leadSuit) {
+		requiredSuit = leadSuit
+	} else if hasCardOfSuit(playerCards, t.Trump) {
+		requiredSuit = t.Trump
+	} else {
 		return nil
 	}
 
-	if hasCardOfSuit(playerCards, originalSuit) {
-		return fmt.Errorf("player must play a card of the original suit")
+	if card.Suit != requiredSuit {
+		if requiredSuit == leadSuit {
+			return ErrMustPlayLeadSuitCard
+		}
+		return ErrMustPlayTrumpCard
 	}
 
-	if !hasCardOfSuit(playerCards, t.Trump) {
-		return nil
-	}
-
-	if card.Suit != t.Trump {
-		return fmt.Errorf("player must play a trump card")
-	}
-
-	highestTrumpInTrick := t.getHighestTrumpInTrick()
-
-	if highestTrumpInTrick != nil {
-		return t.validateHigherTrumpRule(card, playerCards)
+	if requiredSuit == t.Trump {
+		if err := t.validateHigherTrumpRule(card, playerCards); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -133,9 +141,13 @@ func (t *Trick) validateHigherTrumpRule(card Card, playerCards map[Card]bool) er
 
 	highestTrumpInTrick := t.getHighestTrumpInTrick()
 
+	if highestTrumpInTrick == nil {
+		return nil
+	}
+
 	if playersHighestTrump.getTrumpRankOrderIndex() > highestTrumpInTrick.getTrumpRankOrderIndex() &&
 		card.Rank.getTrumpRankOrderIndex() < highestTrumpInTrick.getTrumpRankOrderIndex() {
-		return fmt.Errorf("player must play a higher trump card")
+		return ErrMustPlayHigherRankTrumpCard
 	}
 
 	return nil
@@ -150,7 +162,7 @@ func hasCardOfSuit(playerCards map[Card]bool, suit Suit) bool {
 	return false
 }
 
-func (t *Trick) getOriginalSuit() Suit {
+func (t *Trick) getLeadSuit() Suit {
 	return t.Cards[t.StartingPlayer].Suit
 }
 
@@ -167,7 +179,7 @@ func (t *Trick) getHighestTrumpInTrick() *Rank {
 		}
 	}
 
-	return nil
+	return highestRank
 }
 
 func getPlayersHighestTrump(playerCards map[Card]bool, trump Suit) *Rank {
