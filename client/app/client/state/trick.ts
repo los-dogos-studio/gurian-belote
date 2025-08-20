@@ -1,12 +1,12 @@
 import { Transform, Type } from "class-transformer";
-import type { Card } from "../card";
-import { stringMapToIntEnumMap } from "./enum-map-utils";
+import { Card } from "../card";
+import { enumKeyMapToClassValue } from "./enum-map-utils";
 import { IsEnum } from "class-validator";
 import { PlayerId } from "../player-id";
 
 export class Trick {
 	@Type(() => Map<PlayerId, Card>)
-	@Transform(stringMapToIntEnumMap)
+	@Transform(enumKeyMapToClassValue(Card))
 	playedCards: Map<PlayerId, Card>
 
 	@IsEnum(PlayerId)

@@ -2,7 +2,7 @@ import { Card, Suit } from "../card";
 import { getNextPlayerId, PlayerId } from "../player-id";
 import type { TeamId } from "../team-id";
 import "reflect-metadata";
-import { stringMapToIntEnumMap } from "./enum-map-utils";
+import { enumKeyMap } from "./enum-map-utils";
 import { Transform, Type } from "class-transformer";
 import { IsEnum, IsOptional, ValidateNested } from "class-validator";
 import { Trick } from "./trick";
@@ -42,7 +42,7 @@ export class TableTrumpSelectionHandState extends HandState {
 	startingPlayer: PlayerId;
 
 	@Type(() => Map<PlayerId, boolean>)
-	@Transform(stringMapToIntEnumMap)
+	@Transform(enumKeyMap)
 	selectionStatus: Map<PlayerId, boolean>
 
 
@@ -83,7 +83,7 @@ export class FreeTrumpSelectionHandState extends HandState {
 	startingPlayer: PlayerId;
 
 	@Type(() => Map<PlayerId, boolean>)
-	@Transform(stringMapToIntEnumMap)
+	@Transform(enumKeyMap)
 	selectionStatus: Map<PlayerId, boolean>
 
 	constructor(
@@ -122,7 +122,7 @@ export class InProgressHandState extends HandState {
 	trick: Trick
 
 	@Type(() => Map<TeamId, number>)
-	@Transform(stringMapToIntEnumMap)
+	@Transform(enumKeyMap)
 	totals: Map<TeamId, number>
 
 	constructor(
@@ -146,31 +146,61 @@ export class InProgressHandState extends HandState {
 	}
 
 	getPlayableCards(playerCards: Card[]): Card[] {
-		const trumpSuit = this.trump;
-		const trick = this.trick;
+		return playerCards.filter(card => this.isCardPlayable(card, playerCards));
+	}
 
-		if (trick.playedCards.size === 0) return [...playerCards];
-
-		const firstCard = trick.playedCards.get(trick.startingPlayer)!;
-		const leadSuit = firstCard.suit;
-
-		const cardsOfLeadSuit = playerCards.filter(card => card.suit === leadSuit);
-
-		if (cardsOfLeadSuit.length > 0) return cardsOfLeadSuit;
-
-		const playerTrumpCards = playerCards.filter(card => card.suit === trumpSuit);
-		const trumpPlayed = Array.from(trick.playedCards.values()).some(card => card.suit === trumpSuit);
-
-		if (trumpPlayed && playerTrumpCards.length > 0) {
-			const highestTrump = Array.from(trick.playedCards.values())
-				.filter(card => card.suit === trumpSuit)
-				.reduce((highest, current) => current.compare(highest, trumpSuit) > 0 ? current : highest);
-
-			const higherTrumpCards = playerTrumpCards.filter(card => card.compare(highestTrump, trumpSuit) > 0);
-			return higherTrumpCards.length > 0 ? higherTrumpCards : playerTrumpCards;
+	private isCardPlayable(card: Card, playerCards: Card[]): boolean {
+		if (!playerCards.includes(card)) {
+			return false;
 		}
 
-		return playerTrumpCards.length > 0 ? playerTrumpCards : [...playerCards];
+		if (this.trick.playedCards.size === 0) {
+			return true;
+		}
+
+		const firstCard = this.trick.playedCards.get(this.trick.startingPlayer)!;
+		const leadSuit = firstCard.suit;
+
+		if (this.hasCardOfSuit(leadSuit, playerCards)) {
+			var requiredSuit = leadSuit;
+		} else if (this.hasCardOfSuit(this.trump, playerCards)) {
+			var requiredSuit = this.trump;
+		} else {
+			return true;
+		}
+
+		if (card.suit !== requiredSuit) {
+			return false;
+		}
+
+		if (requiredSuit === this.trump) {
+			const highestTrumpInTrick = this.getHighestTrumpInTrick();
+			const highestPlayerTrump = playerCards
+				.filter(c => c.suit === this.trump)
+				.sort((a, b) => -a.compare(b, this.trump))[0];
+
+			if (highestTrumpInTrick && highestPlayerTrump && highestPlayerTrump.compare(highestTrumpInTrick, this.trump) > 0) {
+				return card.compare(highestTrumpInTrick, this.trump) > 0;
+			}
+		}
+
+		return true;
+	}
+
+	private hasCardOfSuit(suit: Suit, playerCards: Card[]): boolean {
+		return playerCards.some(card => card.suit === suit);
+	}
+
+	private getHighestTrumpInTrick(): Card | null {
+		let highestTrump: Card | null = null;
+		for (const card of this.trick.playedCards.values()) {
+			if (card.suit === this.trump) {
+				if (!highestTrump || card.compare(highestTrump, this.trump) > 0) {
+					highestTrump = card;
+				}
+			}
+		}
+		return highestTrump;
 	}
 }
 
