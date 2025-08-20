@@ -6,9 +6,6 @@ const GameClientContext = createContext<GameClient | null>(null);
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const wsUrl = `${protocol}//${window.location.host}/ws`;
 
-const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const wsUrl = `${protocol}//${window.location.host}/ws`;
-
 export const GameClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 	const clientRef = useRef(new GameClient(wsUrl));
 	const { setGameState } = useGameState();
