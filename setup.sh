@@ -21,7 +21,13 @@ docker compose down
 
 echo "Starting services with HTTP-only nginx..."
 cp nginx-initial.conf nginx.conf
-docker compose up -d --build server nginx
+echo "Building images..."
+docker compose build server nginx
+if [ $? -ne 0 ]; then
+    echo "Build failed! Stopping deployment."
+    exit 1
+fi
+docker compose up -d server nginx
 
 echo "Checking for existing SSL certificate..."
 if docker compose run --rm certbot certificates | grep -q "$DOMAIN"; then
