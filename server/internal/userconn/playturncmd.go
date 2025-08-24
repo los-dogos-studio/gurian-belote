@@ -25,7 +25,7 @@ func NewPlayTurnCmd(msg []byte) (Cmd, error) {
 }
 
 func (c *PlayTurnCmd) HandleCommand(context *CmdContext) error {
-	user := context.user
+	user := context.connection
 
 	roomCmd, err := gamecmd.NewGameCmdFromJson(c.Move)
 	if err != nil {
@@ -36,5 +36,5 @@ func (c *PlayTurnCmd) HandleCommand(context *CmdContext) error {
 		return ErrUserNotInRoom
 	}
 
-	return user.Room.PlayTurn(user.UserId, roomCmd)
+	return user.Room.PlayTurn(user.Token, roomCmd)
 }

@@ -4,7 +4,7 @@ import ListPanel from "~/components/ListPanel";
 import { TeamId } from "~/client/team-id";
 import Button from "~/components/Button";
 import { useGameClient } from "../GameClientContext";
-import { LuCopy, LuPlus } from "react-icons/lu";
+import { LuCopy, LuPlus, LuLogOut } from "react-icons/lu";
 
 interface TeamColumnProps {
 	teamId: TeamId,
@@ -99,8 +99,16 @@ export const TeamSelection = () => {
 					onClick={() => client.startGame()}
 					variant="primary"
 					disabled={joinedPlayersCount !== 4}
+					className="mb-4"
 				>
 					Start Game
+				</Button>
+				<Button
+					onClick={() => client.leaveRoom()}
+					variant="secondary"
+				>
+					<LuLogOut className="w-4 h-4 mr-2" />
+					Leave Room
 				</Button>
 			</Panel>
 		</div>

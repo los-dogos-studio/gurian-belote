@@ -1,10 +1,12 @@
 package server
 
 import (
-	"github.com/gorilla/websocket"
-	"github.com/los-dogos-studio/gurian-belote/server/internal/app"
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/gorilla/websocket"
+	"github.com/los-dogos-studio/gurian-belote/server/internal/app"
 )
 
 type Server struct {
@@ -28,6 +30,7 @@ func NewServer() *Server {
 }
 
 func (s *Server) Start() error {
+	http.HandleFunc("/auth", s.handleAuth)
 	http.HandleFunc("/ws", s.handleWs)
 	return http.ListenAndServe(":8080", nil)
 }
@@ -35,11 +38,14 @@ func (s *Server) Start() error {
 func (s *Server) handleWs(w http.ResponseWriter, r *http.Request) {
 	log.Println("New connection from:", r.RemoteAddr)
 
-	userId := r.URL.Query().Get("userId")
-	if userId == "" {
-		http.Error(w, "userId is required", http.StatusBadRequest)
+	token, roomId, userName := s.extractRequestParams(r)
+
+	if token == "" {
+		http.Error(w, "Authentication required", http.StatusUnauthorized)
 		return
 	}
+
+	isReconnection := roomId != ""
 
 	ws, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -48,5 +54,51 @@ func (s *Server) handleWs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.state.HandleUserConnection(userId, ws)
+	if isReconnection {
+		s.state.HandleReconnection(token, roomId, ws)
+	} else {
+		if userName == "" {
+			ws.WriteMessage(websocket.TextMessage, []byte(`{"error":"userName required for new connection"}`))
+			ws.Close()
+			return
+		}
+		s.state.HandleNewConnection(token, userName, ws)
+	}
+}
+
+func (s *Server) extractRequestParams(r *http.Request) (token, roomId, userName string) {
+	if cookie, err := r.Cookie("token"); err == nil {
+		token = cookie.Value
+	}
+	roomId = r.URL.Query().Get("roomId")
+	userName = r.URL.Query().Get("userName")
+	return
+}
+
+func (s *Server) handleAuth(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userName := r.URL.Query().Get("userName")
+	if userName == "" {
+		http.Error(w, "userName required", http.StatusBadRequest)
+		return
+	}
+
+	token := s.state.GenerateToken(userName)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    token,
+		HttpOnly: true,
+		Secure:   os.Getenv("ENV") == "production",
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
+		MaxAge:   12 * 60 * 60,
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"token":"` + token + `"}`))
 }

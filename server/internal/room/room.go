@@ -29,6 +29,7 @@ type UserData struct {
 	playerId game.PlayerId
 	team     game.TeamId
 	conn     messageSender
+	userName string
 }
 
 var (
@@ -48,11 +49,11 @@ func NewRoom(id string) *Room {
 	}
 }
 
-func (r *Room) Join(userId string, conn messageSender) error {
+func (r *Room) Join(token string, conn messageSender, userName string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if _, ok := r.Users[userId]; ok {
+	if _, ok := r.Users[token]; ok {
 		return nil
 	}
 
@@ -64,20 +65,21 @@ func (r *Room) Join(userId string, conn messageSender) error {
 		return ErrRoomFull
 	}
 
-	r.Users[userId] = UserData{
+	r.Users[token] = UserData{
 		playerId: game.NoPlayerId,
 		team:     game.Team1,
 		conn:     conn,
+		userName: userName,
 	}
 
 	return nil
 }
 
-func (r *Room) ChooseTeam(userId string, team game.TeamId) error {
+func (r *Room) ChooseTeam(token string, team game.TeamId) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if _, ok := r.Users[userId]; !ok {
+	if _, ok := r.Users[token]; !ok {
 		return ErrPlayerNotFound
 	}
 
@@ -85,20 +87,22 @@ func (r *Room) ChooseTeam(userId string, team game.TeamId) error {
 		return ErrGameAlreadyStarted
 	}
 
-	r.Users[userId] = UserData{
-		playerId: r.Users[userId].playerId,
+	userData := r.Users[token]
+	r.Users[token] = UserData{
+		playerId: userData.playerId,
 		team:     team,
-		conn:     r.Users[userId].conn,
+		conn:     userData.conn,
+		userName: userData.userName,
 	}
 
 	return nil
 }
 
-func (r *Room) PlayTurn(userId string, gameCmd gamecmd.PlayableCmd) error {
+func (r *Room) PlayTurn(token string, gameCmd gamecmd.PlayableCmd) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	return gameCmd.PlayTurnAs(r.Users[userId].playerId, &r.Game)
+	return gameCmd.PlayTurnAs(r.Users[token].playerId, &r.Game)
 }
 
 func (r *Room) StartGame() error {
@@ -118,12 +122,31 @@ func (r *Room) StartGame() error {
 	return nil
 }
 
+func (r *Room) UpdateUserConnection(token string, conn messageSender) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	userData, exists := r.Users[token]
+	if !exists {
+		return ErrPlayerNotFound
+	}
+
+	r.Users[token] = UserData{
+		playerId: userData.playerId,
+		team:     userData.team,
+		conn:     conn,
+		userName: userData.userName,
+	}
+
+	return nil
+}
+
 func (r *Room) BroadcastState() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	for userId, user := range r.Users {
-		userState, err := r.DumpUserState(userId)
+	for token, user := range r.Users {
+		userState, err := r.DumpUserState(token)
 		if err != nil {
 			log.Println("Error dumping user state:", err)
 			continue

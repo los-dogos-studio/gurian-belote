@@ -12,14 +12,24 @@ const Lobby = () => {
 	const client = useGameClient();
 
 	const handleJoinRoom = () => {
-		client.connect(userId).then(() => {
-			client.joinRoom(roomId);
-		});
+		const stored = client.getStoredSession();
+		
+		if (roomId === stored?.roomId) {
+			client.reconnect({
+				onError: console.error
+			});
+		} else {
+			client.connect(userId, {
+				onSuccess: () => client.joinRoom(roomId),
+				onError: console.error
+			});
+		}
 	};
 
 	const handleCreateRoom = () => {
-		client.connect(userId).then(() => {
-			client.createRoom();
+		client.connect(userId, {
+			onSuccess: () => client.createRoom(),
+			onError: console.error
 		});
 	};
 

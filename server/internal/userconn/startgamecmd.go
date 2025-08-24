@@ -7,7 +7,7 @@ func NewStartGameCmd(msg []byte) (Cmd, error) {
 }
 
 func (c *StartGameCmd) HandleCommand(context *CmdContext) error {
-	user := context.user
+	user := context.connection
 
 	if user.Room == nil {
 		return ErrUserNotInRoom

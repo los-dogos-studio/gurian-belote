@@ -1,9 +1,11 @@
 package userconn
 
-import "github.com/los-dogos-studio/gurian-belote/server/internal/room"
+import (
+	"github.com/los-dogos-studio/gurian-belote/server/internal/room"
+)
 
 type CmdContext struct {
-	user        *UserConn
+	connection  *UserConn
 	roomManager *room.RoomManager
 }
 
