@@ -5,7 +5,7 @@ import CardFace from "./CardFace";
 import { useGameClient } from "./GameClientContext";
 import { useGameState } from "./GameStateContext";
 import { GameStage } from "~/client/state/game-state";
-import { HandStage, TableTrumpSelectionHandState } from "~/client/state/hand";
+import { HandStage, InProgressHandState, TableTrumpSelectionHandState } from "~/client/state/hand";
 import { LuClub, LuDiamond, LuHeart, LuSpade } from "react-icons/lu";
 
 interface TableTrumpSelectionPlayerPanelProps {
@@ -181,22 +181,36 @@ const PlayerPanelContent = () => {
 
 	const hand = gameState.gameState.hand;
 	const handState = hand.state;
-	const cards = gameState.userCards;
 	const currentPlayerId = gameState.gameState.hand?.getCurrentTurn();
 	const controlsDisabled = currentPlayerId !== gameState.playerId;
 
 	const skippable = true; // TODO
 
+	let trump = null;
+	if (handState === HandStage.TableTrumpSelection || handState === HandStage.FreeTrumpSelection) {
+		trump = (hand as TableTrumpSelectionHandState).tableTrumpCard.suit;
+	} else {
+		trump = (hand as InProgressHandState).trump;
+	}
+	const cards = gameState.userCards!.sort((a, b) => {
+		if (a.suit !== b.suit) {
+			const suitOrder = [Suit.Spades, Suit.Hearts, Suit.Diamonds, Suit.Clubs];
+			return suitOrder.indexOf(a.suit) - suitOrder.indexOf(b.suit);
+		}
+		return b.compare(a, trump);
+	});
+
+
 	switch (handState) {
 		case HandStage.TableTrumpSelection:
-			return <TableTrumpSelectionPlayerPanel disabled={controlsDisabled} cards={cards!} />;
+			return <TableTrumpSelectionPlayerPanel disabled={controlsDisabled} cards={cards} />;
 		case HandStage.FreeTrumpSelection:
-			return <FreeTrumpSelectionPlayerPanel disabled={controlsDisabled} forbiddenSuit={(hand as TableTrumpSelectionHandState).tableTrumpCard.suit} cards={cards!} skippable={skippable} />;
+			return <FreeTrumpSelectionPlayerPanel disabled={controlsDisabled} forbiddenSuit={trump} cards={cards} skippable={skippable} />;
 		case HandStage.HandInProgress:
 			return (
 				<PlayerCardsPanel 
 					disabled={controlsDisabled} 
-					cards={cards!} 
+					cards={cards} 
 					playableCards={hand.getPlayableCards(cards!)}
 				/>
 			)
