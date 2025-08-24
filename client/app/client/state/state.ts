@@ -12,7 +12,7 @@ export class State {
 	gameState: GameState;
 
 	@IsString()
-	userId: string;
+	token: string;
 
 	@IsEnum(PlayerId)
 	playerId: PlayerId;
@@ -25,12 +25,12 @@ export class State {
 
 	constructor(
 		gameState: GameState,
-		userId: string,
+		token: string,
 		playerId: PlayerId,
 		userCards: Card[]
 	) {
 		this.gameState = gameState;
-		this.userId = userId;
+		this.token = token;
 		this.playerId = playerId;
 		this.userCards = userCards;
 	}

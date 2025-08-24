@@ -22,7 +22,7 @@ func NewChooseTeamCmd(msg []byte) (Cmd, error) {
 }
 
 func (c *ChooseTeamCmd) HandleCommand(context *CmdContext) error {
-	user := context.user
+	user := context.connection
 
 	if c.TeamId != game.Team1 && c.TeamId != game.Team2 {
 		return ErrInvalidTeamId
@@ -32,5 +32,5 @@ func (c *ChooseTeamCmd) HandleCommand(context *CmdContext) error {
 		return ErrUserNotInRoom
 	}
 
-	return user.Room.ChooseTeam(user.UserId, c.TeamId)
+	return user.Room.ChooseTeam(user.Token, c.TeamId)
 }

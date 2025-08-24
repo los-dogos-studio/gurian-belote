@@ -8,16 +8,16 @@ func NewCreateRoomCmd(msg []byte) (Cmd, error) {
 }
 
 func (c *CreateRoomCmd) HandleCommand(context *CmdContext) error {
-	user := context.user
+	user := context.connection
 	roomManager := context.roomManager
 
-	if context.user.Room != nil {
+	if context.connection.Room != nil {
 		return ErrUserAlreadyInRoom
 	}
 
 	userRoom := roomManager.CreateRoom()
 
-	err := userRoom.Join(user.UserId, user)
+	err := userRoom.Join(user.Token, user, user.UserName)
 	if err != nil {
 		roomManager.DeleteRoom(userRoom.Id)
 		return err

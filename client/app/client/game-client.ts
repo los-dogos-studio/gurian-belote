@@ -11,45 +11,126 @@ import type { Card, Suit } from './card';
 import PlayTurnCommand from './command/play-turn';
 import AcceptTrumpMove from './command/move/accept-trump';
 import SelectTrumpMove from './command/move/select-trump';
+import { SessionManager } from './session-manager';
 
 export class GameClient {
 	private ws: WebSocket | null = null;
 	private wsUrl: string;
-	private listeners: ((state: State) => void)[] = [];
+	private authUrl: string;
+	private listeners: ((state: State | null) => void)[] = [];
+	private sessionManager: SessionManager;
 
-	constructor(wsUrl: string) {
+	constructor(wsUrl: string, authUrl: string, sessionManager: SessionManager) {
 		this.wsUrl = wsUrl;
+		this.authUrl = authUrl;
+		this.sessionManager = sessionManager;
 	}
 
-	public connect(userId: string): Promise<void> {
-		return new Promise((resolve, reject) => {
-			this.ws = new WebSocket(this.wsUrl + `?userId=${encodeURIComponent(userId)}`);
+	public connect(userName: string, callbacks?: { onSuccess?: () => void; onError?: (error: Error) => void }): void {
+		if (this.ws) {
+			this.ws.close();
+			this.ws = null;
+		}
 
-			this.ws.onopen = () => {
-				console.log('WebSocket connection established');
-				resolve();
-			};
+		this.authenticate(userName).then(() => {
+			const url = `${this.wsUrl}?userName=${encodeURIComponent(userName)}`;
+			this.createWebSocketConnection(url, {
+				onRoomJoin: (roomId) => this.onSuccessfulRoomJoin(roomId, userName),
+				onSuccess: callbacks?.onSuccess,
+				onError: callbacks?.onError
+			});
+		}).catch(callbacks?.onError);
+	}
 
-			this.ws.onerror = (err) => {
-				console.error('WebSocket error:', err);
-				reject(err);
-			};
+	public reconnect(callbacks?: { onSuccess?: () => void; onError?: (error: Error) => void }): void {
+		const stored = this.getStoredSession();
+		if (!stored?.roomId) {
+			callbacks?.onError?.(new Error('No stored session to reconnect with'));
+			return;
+		}
 
-			this.ws.onclose = () => {
-				console.log('WebSocket closed');
-				this.ws = null;
-			};
+		if (this.ws) {
+			this.ws.close();
+			this.ws = null;
+		}
 
-			this.ws.onmessage = (event) => {
-				if (!event.data) {
-					console.warn('Received empty message from WebSocket');
-					return;
-				}
+		const url = `${this.wsUrl}?roomId=${stored.roomId}`;
+		this.createWebSocketConnection(url, {
+			onRoomJoin: (roomId) => this.onSuccessfulRoomJoin(roomId, stored.userName),
+			onSuccess: callbacks?.onSuccess,
+			onError: callbacks?.onError
+		});
+	}
 
-				const message = plainToInstance(State, JSON.parse(event.data) as State);
-				validateOrReject(message);
-				this.listeners.forEach(listener => listener(message));
-			};
+	private createWebSocketConnection(url: string, handlers: {
+		onRoomJoin: (roomId: string) => void;
+		onSuccess?: () => void;
+		onError?: (error: Error) => void;
+	}): void {
+		const ws = new WebSocket(url);
+
+		ws.onopen = () => {
+			this.ws = ws;
+			handlers.onSuccess?.();
+		};
+
+		ws.onerror = (err) => {
+			console.error('WebSocket error:', err);
+			handlers.onError?.(new Error('WebSocket connection failed'));
+		};
+
+		ws.onclose = () => {
+			this.ws = null;
+		};
+
+		ws.onmessage = async (event) => {
+			if (!event.data) {
+				return;
+			}
+
+			const data = JSON.parse(event.data);
+
+			if (data.error) {
+				handlers.onError?.(new Error(data.error));
+				return;
+			}
+
+			if (!data.gameState) {
+				return;
+			}
+
+			const message = plainToInstance(State, data as State);
+			try {
+				await validateOrReject(message);
+			} catch(error: any) {
+				handlers.onError?.(new Error("Invalid game state received"));
+			}
+
+			if (message.gameState?.roomId) { // TODO shouldn't do on every message
+				handlers.onRoomJoin(message.gameState.roomId);
+			}
+
+			this.listeners.forEach(listener => listener(message));
+		};
+	}
+
+
+	private async authenticate(userName: string): Promise<void> {
+		const response = await fetch(`${this.authUrl}?userName=${encodeURIComponent(userName)}`, {
+			method: 'POST',
+			credentials: 'include'
+		});
+
+		if (!response.ok) {
+			throw new Error('Authentication failed');
+		}
+	}
+
+	private onSuccessfulRoomJoin(roomId: string, userName: string) {
+		this.sessionManager.saveSession({
+			roomId,
+			userName,
+			autoReconnect: true
 		});
 	}
 
@@ -60,6 +141,20 @@ export class GameClient {
 		this.ws = null;
 		this.listeners = [];
 	}
+
+	public leaveRoom() {
+		this.sessionManager.setAutoReconnect(false);
+		this.listeners.forEach(listener => listener(null));
+		if (this.ws) {
+			this.ws.close();
+		}
+		this.ws = null;
+	}
+
+	public getStoredSession() {
+		return this.sessionManager.getSession();
+	}
+
 
 	public joinRoom(roomId: string): void {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
@@ -131,8 +226,7 @@ export class GameClient {
 		this.ws.send(JSON.stringify(command));
 	}
 
-
-	public addListener(listener: (state: State) => void): void {
+	public addListener(listener: (state: State | null) => void): void {
 		this.listeners.push(listener);
 	}
 }

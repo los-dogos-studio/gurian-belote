@@ -9,7 +9,8 @@ import (
 )
 
 type UserConn struct {
-	UserId      string
+	Token       string
+	UserName    string
 	Room        *room.Room
 	Open        *atomic.Bool
 	roomManager *room.RoomManager
@@ -17,7 +18,8 @@ type UserConn struct {
 }
 
 func NewUserConn(
-	userId string,
+	token string,
+	userName string,
 	roomManager *room.RoomManager,
 	ws *websocket.Conn,
 ) *UserConn {
@@ -25,7 +27,8 @@ func NewUserConn(
 	open.Store(true)
 
 	return &UserConn{
-		UserId:      userId,
+		Token:       token,
+		UserName:    userName,
 		Room:        nil,
 		Open:        open,
 		roomManager: roomManager,
@@ -48,7 +51,7 @@ func (c *UserConn) Serve() {
 		}
 
 		cmdContext := CmdContext{
-			user:        c,
+			connection:  c,
 			roomManager: c.roomManager,
 		}
 

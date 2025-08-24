@@ -20,7 +20,7 @@ func NewJoinRoomCmd(msg []byte) (Cmd, error) {
 }
 
 func (c *JoinRoomCmd) HandleCommand(context *CmdContext) error {
-	user := context.user
+	user := context.connection
 	roomManager := context.roomManager
 
 	if user.Room != nil {
@@ -32,7 +32,7 @@ func (c *JoinRoomCmd) HandleCommand(context *CmdContext) error {
 		return ErrRoomNotFound
 	}
 
-	err := userRoom.Join(user.UserId, user)
+	err := userRoom.Join(user.Token, user, user.UserName)
 	if err != nil {
 		return err
 	}

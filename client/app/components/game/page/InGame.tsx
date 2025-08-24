@@ -2,7 +2,9 @@ import { useGameState } from "../GameStateContext";
 import Scoreboard from "../Scoreboard";
 import { Suit, type Card } from "~/client/card";
 import PlayerPanel from "../PlayerPanel";
-import { LuUser } from "react-icons/lu";
+import { LuUser, LuLogOut } from "react-icons/lu";
+import Button from "~/components/Button";
+import { useGameClient } from "../GameClientContext";
 import CardFace from "../CardFace";
 import { getNextPlayerId, type PlayerId } from "~/client/player-id";
 import { FreeTrumpSelectionHandState, HandStage, InProgressHandState, TableTrumpSelectionHandState } from "~/client/state/hand";
@@ -40,6 +42,7 @@ const Trick = ({ bottom, left, top, right }: TrickProps) => {
 
 export const InGame = () => {
 	const { gameState } = useGameState();
+	const client = useGameClient();
 
 	if (!gameState) {
 		return <div className="text-white">Waiting for game...</div>;
@@ -122,6 +125,16 @@ export const InGame = () => {
 
 	return (
 		<div className="h-full w-full relative gap-4 p-4 text-white">
+			<div className="absolute top-2 left-2 p-3">
+				<Button
+					onClick={() => client.leaveRoom()}
+					variant="primary"
+					className="px-4 py-4"
+				>
+					<LuLogOut className="w-6 h-6" />
+				</Button>
+			</div>
+
 			<div className="absolute top-2 right-2 p-3 flex gap-4">
 				{gameState.gameState.hand && gameState.gameState.hand.state === HandStage.HandInProgress &&
 					<TrumpDisplay suit={(gameState.gameState.hand as InProgressHandState).trump} />

@@ -77,7 +77,7 @@ type StateDump struct {
 
 type UserStateDump struct {
 	GameState StateDump     `json:"gameState"`
-	UserId    string        `json:"userId"`
+	Token     string        `json:"token"`
 	PlayerId  game.PlayerId `json:"playerId"`
 	UserCards []game.Card   `json:"userCards"`
 }
@@ -97,25 +97,25 @@ func (r *Room) DumpState() StateDump {
 	}
 }
 
-func (r *Room) DumpUserState(userId string) (UserStateDump, error) {
-	_, ok := r.Users[userId]
+func (r *Room) DumpUserState(token string) (UserStateDump, error) {
+	_, ok := r.Users[token]
 	if !ok {
 		return UserStateDump{}, ErrUserNotInRoom
 	}
 
 	state := r.DumpState()
-	userCards := r.dumpUserCards(userId)
+	userCards := r.dumpUserCards(token)
 
 	return UserStateDump{
 		GameState: state,
-		UserId:    userId,
-		PlayerId:  r.Users[userId].playerId,
+		Token:     token,
+		PlayerId:  r.Users[token].playerId,
 		UserCards: userCards,
 	}, nil
 }
 
-func (r *Room) dumpUserCards(userId string) []game.Card {
-	user, ok := r.Users[userId]
+func (r *Room) dumpUserCards(token string) []game.Card {
+	user, ok := r.Users[token]
 	if !ok {
 		return nil
 	}
@@ -138,8 +138,8 @@ func (r *Room) dumpUserCards(userId string) []game.Card {
 
 func (r *Room) dumpPlayersMap() map[game.PlayerId]string {
 	players := make(map[game.PlayerId]string)
-	for id, user := range r.Users {
-		players[user.playerId] = id
+	for _, user := range r.Users {
+		players[user.playerId] = user.userName
 	}
 	return players
 }
@@ -151,8 +151,8 @@ func (r *Room) dumpTeams() map[game.TeamId][]string {
 
 	teams := make(map[game.TeamId][]string)
 
-	for id, user := range r.Users {
-		teams[user.team] = append(teams[user.team], id)
+	for _, user := range r.Users {
+		teams[user.team] = append(teams[user.team], user.userName)
 	}
 	return teams
 }

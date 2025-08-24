@@ -6,6 +6,8 @@ services:
       dockerfile: Dockerfile.server
     container_name: gurian-belote-server
     restart: unless-stopped
+    environment:
+      - ENV=production
 
   nginx:
     build:
