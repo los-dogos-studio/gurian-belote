@@ -8,7 +8,7 @@ import (
 )
 
 type Server struct {
-	state    app.App
+	app      app.App
 	upgrader websocket.Upgrader
 }
 
@@ -18,7 +18,7 @@ func checkOrigin(r *http.Request) bool {
 
 func NewServer() *Server {
 	return &Server{
-		state: app.NewApp(),
+		app: app.NewApp(),
 		upgrader: websocket.Upgrader{
 			CheckOrigin:     checkOrigin,
 			ReadBufferSize:  1024,
@@ -48,5 +48,5 @@ func (s *Server) handleWs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.state.HandleUserConnection(userId, ws)
+	s.app.HandleUserConnection(userId, ws)
 }
