@@ -1,6 +1,7 @@
 package userconn
 
 import (
+	"encoding/json"
 	"log"
 	"sync/atomic"
 
@@ -43,7 +44,16 @@ func (c *UserConn) Serve() {
 
 		cmd, err := ParseCmd(msg)
 		if err != nil {
-			// TODO: handle error
+			log.Println("Error parsing command:", err)
+			errMsg := ErrorMessage{
+				Error: "invalid command",
+			}
+			errMsgJson, err := json.Marshal(errMsg)
+			if err != nil {
+				log.Println("Error marshaling error message:", err)
+				continue
+			}
+			c.SendMessage(errMsgJson)
 			continue
 		}
 
@@ -54,7 +64,15 @@ func (c *UserConn) Serve() {
 
 		err = cmd.HandleCommand(&cmdContext)
 		if err != nil {
-			log.Println(err) // FIXME
+			errMsg := ErrorMessage{
+				Error: err.Error(),
+			}
+			errMsgJson, err := json.Marshal(errMsg)
+			if err != nil {
+				log.Println("Error marshaling error message:", err)
+				continue
+			}
+			c.SendMessage(errMsgJson)
 			continue
 		}
 
