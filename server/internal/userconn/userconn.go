@@ -2,6 +2,7 @@ package userconn
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"sync/atomic"
 
@@ -15,27 +16,51 @@ type UserConn struct {
 	Open        *atomic.Bool
 	roomManager *room.RoomManager
 	ws          *websocket.Conn
+	sessionId   string
 }
+
+type sessionIdMsg struct {
+	SessionId string `json:"sessionId"`
+}
+
+var (
+	ErrConnectionClosed = errors.New("userconn: connection is closed")
+)
 
 func NewUserConn(
 	userId string,
+	room *room.Room,
 	roomManager *room.RoomManager,
 	ws *websocket.Conn,
+	sessionId string,
 ) *UserConn {
 	open := &atomic.Bool{}
 	open.Store(true)
 
 	return &UserConn{
 		UserId:      userId,
-		Room:        nil,
+		Room:        room,
 		Open:        open,
 		roomManager: roomManager,
 		ws:          ws,
+		sessionId:   sessionId,
 	}
 }
 
 func (c *UserConn) Serve() {
 	defer c.ws.Close()
+
+	err := c.ws.WriteJSON(sessionIdMsg{
+		SessionId: c.sessionId,
+	})
+	if err != nil {
+		log.Println("Error sending sessionId:", err)
+	}
+
+	if c.Room != nil {
+		c.Room.BroadcastState()
+	}
+
 	for {
 		_, msg, err := c.ws.ReadMessage()
 		if err != nil || !c.Open.Load() {
@@ -84,7 +109,8 @@ func (c *UserConn) Serve() {
 
 func (c *UserConn) SendMessage(msg []byte) error {
 	if !c.Open.Load() {
-		return nil
+		// TODO: Check
+		return ErrConnectionClosed
 	}
 
 	err := c.ws.WriteMessage(websocket.TextMessage, msg)

@@ -9,8 +9,9 @@ import (
 )
 
 type User struct {
-	Id   string
-	conn *userconn.UserConn
+	Id        string
+	conn      *userconn.UserConn
+	sessionId string
 }
 
 type App struct {
@@ -27,24 +28,44 @@ func NewApp() App {
 	}
 }
 
-func (app *App) HandleUserConnection(userId string, ws *websocket.Conn) {
+func (app *App) HandleUserConnection(
+	userId string,
+	sessionId string,
+	ws *websocket.Conn) {
 	app.mu.Lock()
 	defer app.mu.Unlock()
 
-	// TODO: auth
-	if oldUser, ok := app.users[userId]; ok {
-		oldUser.conn.Close()
-		delete(app.users, userId)
+	user := app.users[userId]
+
+	if user != nil {
+		oldUserConn := user.conn
+
+		userRoom := oldUserConn.Room
+		oldUserConn.Close()
+
+		user.conn = userconn.NewUserConn(
+			userId,
+			userRoom,
+			&app.roomManager,
+			ws,
+			sessionId)
+		if userRoom != nil {
+			userRoom.UpdateUserConnection(userId, user.conn)
+		}
+	} else {
+		user = &User{
+			Id:        userId,
+			sessionId: sessionId,
+			conn: userconn.NewUserConn(
+				userId,
+				nil,
+				&app.roomManager,
+				ws,
+				sessionId),
+		}
+
+		app.users[userId] = user
 	}
 
-	conn := userconn.NewUserConn(
-		userId,
-		&app.roomManager,
-		ws,
-	)
-
-	user := &User{Id: userId, conn: conn}
-	app.users[userId] = user
-
-	go conn.Serve()
+	go user.conn.Serve()
 }

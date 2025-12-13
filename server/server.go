@@ -1,15 +1,18 @@
 package server
 
 import (
-	"github.com/gorilla/websocket"
-	"github.com/los-dogos-studio/gurian-belote/server/internal/app"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/websocket"
+	"github.com/los-dogos-studio/gurian-belote/server/internal/app"
+	"github.com/los-dogos-studio/gurian-belote/server/internal/session"
 )
 
 type Server struct {
-	app      app.App
-	upgrader websocket.Upgrader
+	app            app.App
+	upgrader       websocket.Upgrader
+	sessionManager *session.SessionManager
 }
 
 func checkOrigin(r *http.Request) bool {
@@ -24,6 +27,7 @@ func NewServer() *Server {
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
 		},
+		sessionManager: session.NewSessionManager(),
 	}
 }
 
@@ -41,12 +45,28 @@ func (s *Server) handleWs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sessionId := r.URL.Query().Get("sessionId")
+	if sessionId == "" {
+		newSessionId, err := s.sessionManager.CreateSession(userId)
+		if err == session.ErrNotAuthenticated {
+			http.Error(w, "User not authenticated", http.StatusUnauthorized)
+			return
+		}
+		sessionId = newSessionId
+	} else {
+		err := s.sessionManager.AuthUser(userId, sessionId)
+		if err == session.ErrNotAuthenticated {
+			http.Error(w, "User not authenticated", http.StatusUnauthorized)
+			return
+		}
+	}
+
 	ws, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("Failed to upgrade connection:", err)
-		http.Error(w, "Failed to upgrade connection", http.StatusInternalServerError)
+		log.Println("Failed to upgrade to websocket:", err)
+		http.Error(w, "Failed to upgrade to websocket", http.StatusInternalServerError)
 		return
 	}
 
-	s.app.HandleUserConnection(userId, ws)
+	go s.app.HandleUserConnection(userId, sessionId, ws)
 }
