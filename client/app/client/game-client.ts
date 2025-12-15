@@ -11,19 +11,42 @@ import type { Card, Suit } from './card';
 import PlayTurnCommand from './command/play-turn';
 import AcceptTrumpMove from './command/move/accept-trump';
 import SelectTrumpMove from './command/move/select-trump';
+import { SessionManager } from './session-manager';
 
 export class GameClient {
 	private ws: WebSocket | null = null;
+	private sessionManager: SessionManager;
 	private wsUrl: string;
 	private listeners: ((state: State) => void)[] = [];
 
 	constructor(wsUrl: string) {
 		this.wsUrl = wsUrl;
+		this.sessionManager = new SessionManager();
+	}
+
+	public reconnect(): Promise<void> {
+		if (this.ws && this.ws.readyState != WebSocket.CLOSED) {
+			return Promise.resolve();
+		}
+
+		const activeSession = this.sessionManager.getSession();
+		if (!activeSession) {
+			return Promise.reject(new Error('No active session to reconnect.'));
+		}
+		return this.connect(activeSession.userId);
 	}
 
 	public connect(userId: string): Promise<void> {
 		return new Promise((resolve, reject) => {
-			this.ws = new WebSocket(this.wsUrl + `?userId=${encodeURIComponent(userId)}`);
+			let session = this.sessionManager.getSession();
+			if (session && session.userId !== userId) {
+				this.sessionManager.clearSession();
+				session = null;
+			}
+
+			const url = `${this.wsUrl}?userId=${encodeURIComponent(userId)}` + (session ? `&sessionId=${encodeURIComponent(session.id)}` : '');
+
+			this.ws = new WebSocket(url);
 
 			this.ws.onopen = () => {
 				console.log('WebSocket connection established');
@@ -45,8 +68,12 @@ export class GameClient {
 					console.warn('Received empty message from WebSocket');
 					return;
 				}
-
-				const message = plainToInstance(State, JSON.parse(event.data) as State);
+				const content = JSON.parse(event.data);
+				if (content.sessionId) {
+					this.sessionManager.saveSession(content.sessionId, userId);
+					return;
+				}
+				const message = plainToInstance(State, content as State);
 				validateOrReject(message);
 				this.listeners.forEach(listener => listener(message));
 			};

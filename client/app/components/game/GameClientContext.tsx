@@ -29,6 +29,12 @@ export const useGameClient = () => {
 	if (!ctx) {
 		throw new Error('useGameClient must be used within a GameClientProvider');
 	}
+
+	useEffect(() => {
+		return () => {
+			ctx.reconnect().catch(_err => { });
+		};
+	}, []);
 	return ctx;
 };
 
