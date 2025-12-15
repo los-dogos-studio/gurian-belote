@@ -13,6 +13,10 @@ import AcceptTrumpMove from './command/move/accept-trump';
 import SelectTrumpMove from './command/move/select-trump';
 import { SessionManager } from './session-manager';
 
+enum CloseEventCodes {
+	InvalidSession = 4001,
+}
+
 export class GameClient {
 	private ws: WebSocket | null = null;
 	private sessionManager: SessionManager;
@@ -58,8 +62,11 @@ export class GameClient {
 				reject(err);
 			};
 
-			this.ws.onclose = () => {
-				console.log('WebSocket closed');
+			this.ws.onclose = (event) => {
+				console.log('WebSocket closed: ', event.code, event.reason);
+				if (event.code === CloseEventCodes.InvalidSession) {
+					this.sessionManager.clearSession();
+				}
 				this.ws = null;
 			};
 

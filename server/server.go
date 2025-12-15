@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/los-dogos-studio/gurian-belote/server/internal/app"
@@ -14,6 +15,10 @@ type Server struct {
 	upgrader       websocket.Upgrader
 	sessionManager *session.SessionManager
 }
+
+const (
+	WsCloseCodeInvalidSession = 4001
+)
 
 func checkOrigin(r *http.Request) bool {
 	return true // TODO
@@ -39,26 +44,10 @@ func (s *Server) Start() error {
 func (s *Server) handleWs(w http.ResponseWriter, r *http.Request) {
 	log.Println("New connection from:", r.RemoteAddr)
 
-	userId := r.URL.Query().Get("userId")
-	if userId == "" {
+	userIdParam := r.URL.Query().Get("userId")
+	if userIdParam == "" {
 		http.Error(w, "userId is required", http.StatusBadRequest)
 		return
-	}
-
-	sessionId := r.URL.Query().Get("sessionId")
-	if sessionId == "" {
-		newSessionId, err := s.sessionManager.CreateSession(userId)
-		if err == session.ErrNotAuthenticated {
-			http.Error(w, "User not authenticated", http.StatusUnauthorized)
-			return
-		}
-		sessionId = newSessionId
-	} else {
-		err := s.sessionManager.AuthUser(userId, sessionId)
-		if err == session.ErrNotAuthenticated {
-			http.Error(w, "User not authenticated", http.StatusUnauthorized)
-			return
-		}
 	}
 
 	ws, err := s.upgrader.Upgrade(w, r, nil)
@@ -68,5 +57,23 @@ func (s *Server) handleWs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go s.app.HandleUserConnection(userId, sessionId, ws)
+	sessionIdParam := r.URL.Query().Get("sessionId")
+
+	sessionId, err := s.authenticateUser(userIdParam, sessionIdParam)
+	if err == session.ErrNotAuthenticated {
+		wsmsg := websocket.FormatCloseMessage(WsCloseCodeInvalidSession, "User not authenticated")
+		ws.WriteControl(websocket.CloseMessage, wsmsg, time.Now().Add(time.Second))
+		return
+	}
+
+	go s.app.HandleUserConnection(userIdParam, sessionId, ws)
+}
+
+func (s *Server) authenticateUser(userId string, sessionId string) (string, error) {
+	if sessionId == "" {
+		return s.sessionManager.CreateSession(userId)
+	}
+
+	err := s.sessionManager.AuthUser(userId, sessionId)
+	return sessionId, err
 }
