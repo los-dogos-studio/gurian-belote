@@ -1,17 +1,14 @@
-import { GameClientProvider } from "./GameClientContext";
-import { GameStateProvider } from "./GameStateContext";
+import { GameProvider } from "./GameContext";
 import GamePageDispatcher from "./GamePageDispatcher";
 import Background from "../Background";
 
 export const BeloteApp = () => {
 	return (
-		<GameStateProvider>
-			<GameClientProvider>
-				<Background>
-					<GamePageDispatcher />
-				</Background>
-			</GameClientProvider>
-		</GameStateProvider>
+		<GameProvider>
+			<Background>
+				<GamePageDispatcher />
+			</Background>
+		</GameProvider>
 	);
 }
 

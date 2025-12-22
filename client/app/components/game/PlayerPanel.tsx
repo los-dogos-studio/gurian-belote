@@ -1,9 +1,8 @@
-import { Card, Rank, Suit } from "~/client/card";
+import { Card, Suit } from "~/client/card";
 import Panel from "../Panel";
 import Button from "../Button";
 import CardFace from "./CardFace";
-import { useGameClient } from "./GameClientContext";
-import { useGameState } from "./GameStateContext";
+import { useGameClient, useGameState } from "./GameContext";
 import { GameStage } from "~/client/state/game-state";
 import { HandStage, InProgressHandState, TableTrumpSelectionHandState } from "~/client/state/hand";
 import { LuClub, LuDiamond, LuHeart, LuSpade } from "react-icons/lu";

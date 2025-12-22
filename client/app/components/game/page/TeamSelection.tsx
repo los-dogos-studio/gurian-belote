@@ -1,9 +1,8 @@
 import Panel from "~/components/Panel";
-import { useGameState } from "../GameStateContext";
+import { useGameClient, useGameState } from "../GameContext";
 import ListPanel from "~/components/ListPanel";
 import { TeamId } from "~/client/team-id";
 import Button from "~/components/Button";
-import { useGameClient } from "../GameClientContext";
 import { LuCopy, LuPlus } from "react-icons/lu";
 
 interface TeamColumnProps {

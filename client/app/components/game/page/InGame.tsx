@@ -1,4 +1,4 @@
-import { useGameState } from "../GameStateContext";
+import { useGameState } from "../GameContext";
 import Scoreboard from "../Scoreboard";
 import { Suit, type Card } from "~/client/card";
 import PlayerPanel from "../PlayerPanel";
