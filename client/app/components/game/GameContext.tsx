@@ -19,9 +19,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 	useEffect(() => {
 		clientRef.current.addListener(setGameState);
+		clientRef.current.restoreConnection();
+
 		return () => {
-			clientRef.current.disconnect();
-		};
+			clientRef.current.removeListener(setGameState);
+		}
 	}, []);
 
 	return (

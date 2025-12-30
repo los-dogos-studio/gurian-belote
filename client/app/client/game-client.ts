@@ -21,26 +21,27 @@ export class GameClient {
 	private ws: WebSocket | null = null;
 	private sessionManager: SessionManager;
 	private wsUrl: string;
-	private listeners: ((state: State) => void)[] = [];
+	private listeners: ((state: State | null) => void)[] = [];
 
 	constructor(wsUrl: string) {
 		this.wsUrl = wsUrl;
 		this.sessionManager = new SessionManager();
 	}
 
-	public reconnect(): Promise<void> {
+	public restoreConnection(): Promise<void> {
 		if (this.ws && this.ws.readyState != WebSocket.CLOSED) {
 			return Promise.resolve();
 		}
 
-		const activeSession = this.sessionManager.getSession();
-		if (!activeSession) {
-			return Promise.reject(new Error('No active session to reconnect.'));
+		const session = this.sessionManager.getSession();
+		if (!session) {
+			this.fireStateUpdate(null);
+			return Promise.resolve();
 		}
-		return this.connect(activeSession.userId);
+		return this.connect(session.userId);
 	}
 
-	public connect(userId: string): Promise<void> {
+	public connect(userId: string, ): Promise<void> {
 		return new Promise((resolve, reject) => {
 			let session = this.sessionManager.getSession();
 			if (session && session.userId !== userId) {
@@ -64,10 +65,17 @@ export class GameClient {
 
 			this.ws.onclose = (event) => {
 				console.log('WebSocket closed: ', event.code, event.reason);
-				if (event.code === CloseEventCodes.InvalidSession) {
-					this.sessionManager.clearSession();
-				}
 				this.ws = null;
+
+				if (event.code === CloseEventCodes.InvalidSession) {
+					console.warn('Session invalid, clearing session data');
+					this.sessionManager.clearSession();
+					this.fireStateUpdate(null);
+					return;
+				}
+
+				console.log('Connection lost');
+				setTimeout(() => { this.restoreConnection() }, 2000);
 			};
 
 			this.ws.onmessage = (event) => {
@@ -82,17 +90,18 @@ export class GameClient {
 				}
 				const message = plainToInstance(State, content as State);
 				validateOrReject(message);
-				this.listeners.forEach(listener => listener(message));
+				this.fireStateUpdate(message);
 			};
 		});
 	}
 
 	public disconnect() {
+		this.sessionManager.clearSession();
 		if (this.ws) {
 			this.ws.close();
 		}
+		this.fireStateUpdate(null);
 		this.ws = null;
-		this.listeners = [];
 	}
 
 	public joinRoom(roomId: string): void {
@@ -165,9 +174,16 @@ export class GameClient {
 		this.ws.send(JSON.stringify(command));
 	}
 
-
-	public addListener(listener: (state: State) => void): void {
+	public addListener(listener: (state: State | null) => void): void {
 		this.listeners.push(listener);
+	}
+
+	public removeListener(listener: (state: State | null) => void): void {
+		this.listeners = this.listeners.filter(l => l !== listener);
+	}
+	
+	private fireStateUpdate(state: State | null): void {
+		this.listeners.forEach(listener => listener(state));
 	}
 }
 
