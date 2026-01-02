@@ -1,6 +1,6 @@
-import { GameProvider } from "./GameContext";
-import GamePageDispatcher from "./GamePageDispatcher";
-import Background from "../Background";
+import { GameProvider } from './GameContext'
+import GamePageDispatcher from './GamePageDispatcher'
+import Background from '../Background'
 
 export const BeloteApp = () => {
 	return (
@@ -9,7 +9,7 @@ export const BeloteApp = () => {
 				<GamePageDispatcher />
 			</Background>
 		</GameProvider>
-	);
+	)
 }
 
-export default BeloteApp;
+export default BeloteApp

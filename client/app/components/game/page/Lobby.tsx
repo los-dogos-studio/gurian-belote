@@ -1,34 +1,34 @@
-import { useState } from 'react';
+import { useState } from 'react'
 import { useGameClient } from '../GameContext'
-import Panel from '~/components/Panel';
-import InputField from '~/components/InputField';
-import Button from '~/components/Button';
-import { LuCrown, LuLogIn } from 'react-icons/lu';
-import Break from '~/components/Break';
+import Panel from '~/components/Panel'
+import InputField from '~/components/InputField'
+import Button from '~/components/Button'
+import { LuCrown, LuLogIn } from 'react-icons/lu'
+import Break from '~/components/Break'
 
 const Lobby = () => {
-	const [userId, setUserId] = useState('');
-	const [roomId, setRoomId] = useState('');
-	const client = useGameClient();
+	const [userId, setUserId] = useState('')
+	const [roomId, setRoomId] = useState('')
+	const client = useGameClient()
 
 	const handleJoinRoom = () => {
 		client.connect(userId).then(() => {
-			client.joinRoom(roomId);
-		});
-	};
+			client.joinRoom(roomId)
+		})
+	}
 
 	const handleCreateRoom = () => {
 		client.connect(userId).then(() => {
-			client.createRoom();
-		});
-	};
+			client.createRoom()
+		})
+	}
 
 	const Title = () => {
 		return (
 			<h1 className="text-4xl font-bold text-amber-400/90 text-center mb-8 tracking-wider">
 				Gurian Belote
 			</h1>
-		);
+		)
 	}
 
 	return (
@@ -70,8 +70,7 @@ const Lobby = () => {
 				</Button>
 			</Panel>
 		</div>
-	);
-};
+	)
+}
 
-export default Lobby;
-
+export default Lobby

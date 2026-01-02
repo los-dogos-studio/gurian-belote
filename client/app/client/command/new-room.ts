@@ -1,5 +1,5 @@
 class NewRoomCommand {
-	readonly command: string = 'newRoom';
+	readonly command: string = 'newRoom'
 }
 
-export default NewRoomCommand;
+export default NewRoomCommand

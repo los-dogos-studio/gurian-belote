@@ -1,11 +1,16 @@
 interface ListPanelProps {
-	title?: string;
-	items: string[];
+	title?: string
+	items: string[]
 	footer?: React.ReactNode
 	emptyLabel?: string
 }
 
-export const ListPanel = ({ title, items, footer, emptyLabel = "No entries yet" }: ListPanelProps) => {
+export const ListPanel = ({
+	title,
+	items,
+	footer,
+	emptyLabel = 'No entries yet',
+}: ListPanelProps) => {
 	return (
 		<div className="bg-black/60 rounded-xl p-4 shadow-md w-full flex flex-col min-h-[220px]">
 			<h2 className="text-white text-lg font-semibold mb-3 text-center">
@@ -33,7 +38,7 @@ export const ListPanel = ({ title, items, footer, emptyLabel = "No entries yet" 
 
 			{footer && <div className="mt-4">{footer}</div>}
 		</div>
-	);
+	)
 }
 
-export default ListPanel;
+export default ListPanel

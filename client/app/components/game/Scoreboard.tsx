@@ -1,12 +1,12 @@
-import Panel from "../Panel";
+import Panel from '../Panel'
 
 interface ScoreboardProps {
 	scores: Record<string, number>
-	className?: string;
-};
+	className?: string
+}
 
 export const Scoreboard = ({ scores, className = '' }: ScoreboardProps) => (
-	<Panel className={"p-8 " + className}>
+	<Panel className={'p-8 ' + className}>
 		<h2 className="text-lg font-bold mb-6">Scores</h2>
 		<ul className="space-y-1">
 			{Object.entries(scores).map(([playerName, score]) => (
@@ -17,6 +17,6 @@ export const Scoreboard = ({ scores, className = '' }: ScoreboardProps) => (
 			))}
 		</ul>
 	</Panel>
-);
+)
 
-export default Scoreboard;
+export default Scoreboard

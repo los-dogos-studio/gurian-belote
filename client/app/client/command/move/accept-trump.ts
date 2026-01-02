@@ -1,10 +1,10 @@
 export class AcceptTrumpMove {
-	readonly command: string = "acceptTrump";
-	accepted: boolean;
+	readonly command: string = 'acceptTrump'
+	accepted: boolean
 
 	constructor(accepted: boolean) {
-		this.accepted = accepted;
+		this.accepted = accepted
 	}
 }
 
-export default AcceptTrumpMove;
+export default AcceptTrumpMove

@@ -1,5 +1,5 @@
 class StartGameCommand {
-	readonly command: string = 'startGame';
+	readonly command: string = 'startGame'
 }
 
-export default StartGameCommand;
+export default StartGameCommand

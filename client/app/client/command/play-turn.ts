@@ -1,12 +1,12 @@
-import type { GameMove } from "./move/game-move";
+import type { GameMove } from './move/game-move'
 
 export class PlayTurnCommand {
-	readonly command: string = "playTurn";
-	move: GameMove;
+	readonly command: string = 'playTurn'
+	move: GameMove
 
 	constructor(move: GameMove) {
-		this.move = move;
+		this.move = move
 	}
 }
 
-export default PlayTurnCommand;
+export default PlayTurnCommand

@@ -1,6 +1,6 @@
 export const Panel: React.FC<{
-	children: React.ReactNode;
-	className?: string;
+	children: React.ReactNode
+	className?: string
 }> = ({ children, className }) => {
 	return (
 		<div
@@ -8,7 +8,7 @@ export const Panel: React.FC<{
 		>
 			{children}
 		</div>
-	);
-};
+	)
+}
 
-export default Panel;
+export default Panel

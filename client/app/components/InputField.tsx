@@ -1,22 +1,30 @@
-import type { FC } from 'react';
+import type { FC } from 'react'
 
 interface InputFieldProps {
-	label: string;
-	value: string;
-	onChange: (value: string) => void;
-	placeholder: string;
-	error?: string;
-	disabled?: boolean;
-	isAlphaNumeric?: boolean;
+	label: string
+	value: string
+	onChange: (value: string) => void
+	placeholder: string
+	error?: string
+	disabled?: boolean
+	isAlphaNumeric?: boolean
 }
 
-const InputField: FC<InputFieldProps> = ({ label, value, onChange, placeholder, error, disabled = false, isAlphaNumeric = true }) => {
+const InputField: FC<InputFieldProps> = ({
+	label,
+	value,
+	onChange,
+	placeholder,
+	error,
+	disabled = false,
+	isAlphaNumeric = true,
+}) => {
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const inputValue = e.target.value;
+		const inputValue = e.target.value
 		if (!isAlphaNumeric || /^[a-zA-Z0-9]*$/.test(inputValue)) {
-			onChange(inputValue);
+			onChange(inputValue)
 		}
-	};
+	}
 
 	return (
 		<div className="mb-4">
@@ -33,7 +41,7 @@ const InputField: FC<InputFieldProps> = ({ label, value, onChange, placeholder, 
 			/>
 			{error && <p className="text-red-400 text-xs mt-1">{error}</p>}
 		</div>
-	);
-};
+	)
+}
 
-export default InputField;
+export default InputField

@@ -1,8 +1,5 @@
-import BeloteApp from "~/components/game/BeloteApp";
-
-
+import BeloteApp from '~/components/game/BeloteApp'
 
 export default function App() {
-  return <BeloteApp />;
+	return <BeloteApp />
 }
-
