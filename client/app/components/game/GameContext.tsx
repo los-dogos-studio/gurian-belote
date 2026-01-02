@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import {
+	createContext,
+	type ReactNode,
+	type RefObject,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from 'react'
 import GameClient from '~/client/game-client'
 import type { State } from '~/client/state/state'
 
@@ -8,41 +16,40 @@ export interface GameStateContextType {
 }
 
 const GameStateContext = createContext<GameStateContextType | null>(null)
-const GameClientContext = createContext<GameClient | null>(null)
+const GameClientRefContext = createContext<RefObject<GameClient> | null>(null)
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
 const wsUrl = `${protocol}//${window.location.host}/ws`
 
-export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
-	children,
-}) => {
+export const GameProvider = ({ children }: { children: ReactNode }) => {
 	const clientRef = useRef(new GameClient(wsUrl))
 	const [gameState, setGameState] = useState<State | null>(null)
 
 	useEffect(() => {
-		clientRef.current.addListener(setGameState)
-		clientRef.current.restoreConnection()
+		const client = clientRef.current
+		client.addListener(setGameState)
+		client.restoreConnection()
 
 		return () => {
-			clientRef.current.removeListener(setGameState)
+			client.removeListener(setGameState)
 		}
 	}, [])
 
 	return (
 		<GameStateContext.Provider value={{ gameState, setGameState }}>
-			<GameClientContext.Provider value={clientRef.current}>
+			<GameClientRefContext.Provider value={clientRef}>
 				{children}
-			</GameClientContext.Provider>
+			</GameClientRefContext.Provider>
 		</GameStateContext.Provider>
 	)
 }
 
 export const useGameClient = () => {
-	const context = useContext(GameClientContext)
+	const context = useContext(GameClientRefContext)
 	if (!context) {
 		throw new Error('useGameClient must be used within a GameProvider')
 	}
-	return context
+	return context.current
 }
 
 export const useGameState = () => {

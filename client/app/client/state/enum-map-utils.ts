@@ -13,10 +13,9 @@ export const enumKeyMap = <T, U>(value: TransformFnParams) => {
 	return map
 }
 
-export const enumKeyMapToClassValue = <T, U>(
-	type: new (...args: any[]) => U
-) => {
-	return (value: TransformFnParams) => {
+export const enumKeyMapToClassValue =
+	<T, U>(type: new (...args: unknown[]) => U) =>
+	(value: TransformFnParams) => {
 		const map = new Map<T, U>()
 		value.value.forEach((v: U, k: string) => {
 			const intKey = parseInt(k, 10)
@@ -28,4 +27,3 @@ export const enumKeyMapToClassValue = <T, U>(
 		})
 		return map
 	}
-}

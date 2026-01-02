@@ -150,6 +150,16 @@ export class InProgressHandState extends HandState {
 		)
 	}
 
+	private getRequiredSuit(leadSuit: Suit, playerCards: Card[]): Suit | null {
+		if (this.hasCardOfSuit(leadSuit, playerCards)) {
+			return leadSuit
+		} else if (this.hasCardOfSuit(this.trump, playerCards)) {
+			return this.trump
+		} else {
+			return null
+		}
+	}
+
 	private isCardPlayable(card: Card, playerCards: Card[]): boolean {
 		if (!playerCards.includes(card)) {
 			return false
@@ -162,11 +172,8 @@ export class InProgressHandState extends HandState {
 		const firstCard = this.trick.playedCards.get(this.trick.startingPlayer)!
 		const leadSuit = firstCard.suit
 
-		if (this.hasCardOfSuit(leadSuit, playerCards)) {
-			var requiredSuit = leadSuit
-		} else if (this.hasCardOfSuit(this.trump, playerCards)) {
-			var requiredSuit = this.trump
-		} else {
+		const requiredSuit = this.getRequiredSuit(leadSuit, playerCards)
+		if (requiredSuit === null) {
 			return true
 		}
 
