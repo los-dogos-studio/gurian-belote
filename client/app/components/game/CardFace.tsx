@@ -10,6 +10,34 @@ type CardFaceProps = {
 	className?: string
 }
 
+const TopLabel = ({ card }: { card: Card }) => (
+	<div
+		className={`text-sm font-bold absolute top-2 left-2 ${getSuitColor(card.suit)}`}
+	>
+		{card.rank}
+		<br />
+		{getSuitSymbol(card.suit)}
+	</div>
+)
+
+const BottomLabel = ({ card }: { card: Card }) => (
+	<div
+		className={`text-sm font-bold rotate-180 text-right absolute bottom-2 right-2 ${getSuitColor(card.suit)}`}
+	>
+		{card.rank}
+		<br />
+		{getSuitSymbol(card.suit)}
+	</div>
+)
+
+const CenterLabel = ({ card }: { card: Card }) => (
+	<div
+		className={`text-lg absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${getSuitColor(card.suit)}`}
+	>
+		{getSuitSymbol(card.suit)}
+	</div>
+)
+
 const CardFace: React.FC<CardFaceProps> = ({
 	card,
 	hover = false,
@@ -19,33 +47,6 @@ const CardFace: React.FC<CardFaceProps> = ({
 	const hoverAnimationClass = hover
 		? 'transition-transform duration-300 ease-in-out transform hover:scale-105 hover:outline hover:outline-1 hover:outline-[#FFD700]'
 		: ''
-	const TopLabel = () => (
-		<div
-			className={`text-sm font-bold absolute top-2 left-2 ${getSuitColor(card.suit)}`}
-		>
-			{card.rank}
-			<br />
-			{getSuitSymbol(card.suit)}
-		</div>
-	)
-
-	const BottomLabel = () => (
-		<div
-			className={`text-sm font-bold rotate-180 text-right absolute bottom-2 right-2 ${getSuitColor(card.suit)}`}
-		>
-			{card.rank}
-			<br />
-			{getSuitSymbol(card.suit)}
-		</div>
-	)
-
-	const CenterLabel = () => (
-		<div
-			className={`text-lg absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${getSuitColor(card.suit)}`}
-		>
-			{getSuitSymbol(card.suit)}
-		</div>
-	)
 
 	// FIXME: select-none doesn't work in Safari
 	return (
@@ -55,9 +56,9 @@ const CardFace: React.FC<CardFaceProps> = ({
 			}}
 		>
 			<CardBackground className={`${hoverAnimationClass} ${className}`}>
-				<TopLabel />
-				<CenterLabel />
-				<BottomLabel />
+				<TopLabel card={card} />
+				<CenterLabel card={card} />
+				<BottomLabel card={card} />
 			</CardBackground>
 		</div>
 	)

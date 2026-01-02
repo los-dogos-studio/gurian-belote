@@ -6,6 +6,14 @@ import Button from '~/components/Button'
 import { LuCrown, LuLogIn } from 'react-icons/lu'
 import Break from '~/components/Break'
 
+const Title = () => {
+	return (
+		<h1 className="text-4xl font-bold text-amber-400/90 text-center mb-8 tracking-wider">
+			Gurian Belote
+		</h1>
+	)
+}
+
 const Lobby = () => {
 	const [userId, setUserId] = useState('')
 	const [roomId, setRoomId] = useState('')
@@ -21,14 +29,6 @@ const Lobby = () => {
 		client.connect(userId).then(() => {
 			client.createRoom()
 		})
-	}
-
-	const Title = () => {
-		return (
-			<h1 className="text-4xl font-bold text-amber-400/90 text-center mb-8 tracking-wider">
-				Gurian Belote
-			</h1>
-		)
 	}
 
 	return (
