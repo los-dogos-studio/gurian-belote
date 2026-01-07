@@ -63,6 +63,7 @@ func (s *Server) handleWs(w http.ResponseWriter, r *http.Request) {
 	if err == session.ErrNotAuthenticated {
 		wsmsg := websocket.FormatCloseMessage(WsCloseCodeInvalidSession, "User not authenticated")
 		ws.WriteControl(websocket.CloseMessage, wsmsg, time.Now().Add(time.Second))
+		ws.Close()
 		return
 	}
 
