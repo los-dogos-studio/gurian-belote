@@ -11,19 +11,47 @@ import type { Card, Suit } from './card';
 import PlayTurnCommand from './command/play-turn';
 import AcceptTrumpMove from './command/move/accept-trump';
 import SelectTrumpMove from './command/move/select-trump';
+import { SessionManager } from './session-manager';
+
+enum CloseEventCodes {
+	InvalidSession = 4001,
+}
 
 export class GameClient {
 	private ws: WebSocket | null = null;
+	private sessionManager: SessionManager;
 	private wsUrl: string;
-	private listeners: ((state: State) => void)[] = [];
+	private listeners: ((state: State | null) => void)[] = [];
 
 	constructor(wsUrl: string) {
 		this.wsUrl = wsUrl;
+		this.sessionManager = new SessionManager();
 	}
 
-	public connect(userId: string): Promise<void> {
+	public restoreConnection(): Promise<void> {
+		if (this.ws && this.ws.readyState !== WebSocket.CLOSED) {
+			return Promise.resolve();
+		}
+
+		const session = this.sessionManager.getSession();
+		if (!session) {
+			this.fireStateUpdate(null);
+			return Promise.resolve();
+		}
+		return this.connect(session.userId);
+	}
+
+	public connect(userId: string, ): Promise<void> {
 		return new Promise((resolve, reject) => {
-			this.ws = new WebSocket(this.wsUrl + `?userId=${encodeURIComponent(userId)}`);
+			let session = this.sessionManager.getSession();
+			if (session && session.userId !== userId) {
+				this.sessionManager.clearSession();
+				session = null;
+			}
+
+			const url = `${this.wsUrl}?userId=${encodeURIComponent(userId)}` + (session ? `&sessionId=${encodeURIComponent(session.id)}` : '');
+
+			this.ws = new WebSocket(url);
 
 			this.ws.onopen = () => {
 				console.log('WebSocket connection established');
@@ -35,9 +63,19 @@ export class GameClient {
 				reject(err);
 			};
 
-			this.ws.onclose = () => {
-				console.log('WebSocket closed');
+			this.ws.onclose = (event) => {
+				console.log('WebSocket closed: ', event.code, event.reason);
 				this.ws = null;
+
+				if (event.code === CloseEventCodes.InvalidSession) {
+					console.warn('Session invalid, clearing session data');
+					this.sessionManager.clearSession();
+					this.fireStateUpdate(null);
+					return;
+				}
+
+				console.log('Connection lost');
+				setTimeout(() => { this.restoreConnection() }, 2000);
 			};
 
 			this.ws.onmessage = (event) => {
@@ -45,20 +83,25 @@ export class GameClient {
 					console.warn('Received empty message from WebSocket');
 					return;
 				}
-
-				const message = plainToInstance(State, JSON.parse(event.data) as State);
+				const content = JSON.parse(event.data);
+				if (content.sessionId) {
+					this.sessionManager.saveSession(content.sessionId, userId);
+					return;
+				}
+				const message = plainToInstance(State, content as State);
 				validateOrReject(message);
-				this.listeners.forEach(listener => listener(message));
+				this.fireStateUpdate(message);
 			};
 		});
 	}
 
 	public disconnect() {
+		this.sessionManager.clearSession();
 		if (this.ws) {
 			this.ws.close();
 		}
+		this.fireStateUpdate(null);
 		this.ws = null;
-		this.listeners = [];
 	}
 
 	public joinRoom(roomId: string): void {
@@ -131,9 +174,16 @@ export class GameClient {
 		this.ws.send(JSON.stringify(command));
 	}
 
-
-	public addListener(listener: (state: State) => void): void {
+	public addListener(listener: (state: State | null) => void): void {
 		this.listeners.push(listener);
+	}
+
+	public removeListener(listener: (state: State | null) => void): void {
+		this.listeners = this.listeners.filter(l => l !== listener);
+	}
+	
+	private fireStateUpdate(state: State | null): void {
+		this.listeners.forEach(listener => listener(state));
 	}
 }
 

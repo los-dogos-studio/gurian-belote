@@ -1,5 +1,5 @@
 import { GameStage } from "~/client/state/game-state";
-import { useGameState } from "./GameStateContext";
+import { useGameState } from "./GameContext";
 import GameOver from "./page/GameOver";
 import InGame from "./page/InGame";
 import Lobby from './page/Lobby';

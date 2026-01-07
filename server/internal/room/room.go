@@ -118,6 +118,23 @@ func (r *Room) StartGame() error {
 	return nil
 }
 
+func (r *Room) UpdateUserConnection(userId string, conn messageSender) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, ok := r.Users[userId]; !ok {
+		return ErrPlayerNotFound
+	}
+
+	r.Users[userId] = UserData{
+		playerId: r.Users[userId].playerId,
+		team:     r.Users[userId].team,
+		conn:     conn,
+	}
+
+	return nil
+}
+
 func (r *Room) BroadcastState() {
 	r.mu.Lock()
 	defer r.mu.Unlock()

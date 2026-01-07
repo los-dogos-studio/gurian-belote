@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useGameClient } from '../GameClientContext'
+import { useGameClient } from '../GameContext'
 import Panel from '~/components/Panel';
 import InputField from '~/components/InputField';
 import Button from '~/components/Button';
