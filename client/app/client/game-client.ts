@@ -29,7 +29,7 @@ export class GameClient {
 	}
 
 	public restoreConnection(): Promise<void> {
-		if (this.ws && this.ws.readyState != WebSocket.CLOSED) {
+		if (this.ws && this.ws.readyState !== WebSocket.CLOSED) {
 			return Promise.resolve();
 		}
 
