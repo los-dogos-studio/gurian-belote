@@ -1,28 +1,35 @@
-import { IsEnum, IsOptional, IsString, ValidateNested } from "class-validator";
-import type { PlayerId } from "../player-id";
-import type { TeamId } from "../team-id";
-import { Transform, Type } from "class-transformer";
-import 'reflect-metadata';
-import { enumKeyMap } from "./enum-map-utils";
-import { FreeTrumpSelectionHandState, HandStage, HandState, InProgressHandState, TableTrumpSelectionHandState, type HandStateType } from "./hand";
+import { IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator'
+import type { PlayerId } from '../player-id'
+import type { TeamId } from '../team-id'
+import { Transform, Type } from 'class-transformer'
+import 'reflect-metadata'
+import { enumKeyMap } from './enum-map-utils'
+import {
+	FreeTrumpSelectionHandState,
+	HandStage,
+	HandState,
+	InProgressHandState,
+	TableTrumpSelectionHandState,
+	type HandStateType,
+} from './hand'
 
 export enum GameStage {
-	GameReady = "Ready",
-	GameInProgress = "InProgress",
-	GameFinished = "Finished"
+	GameReady = 'Ready',
+	GameInProgress = 'InProgress',
+	GameFinished = 'Finished',
 }
 
 export class GameState {
 	@IsString()
-	roomId: string;
+	roomId: string
 
 	@Type(() => Map<PlayerId, string>)
 	@Transform(enumKeyMap)
-	players: Map<PlayerId, string>;
+	players: Map<PlayerId, string>
 
 	@Type(() => Map<TeamId, string[]>)
 	@Transform(enumKeyMap)
-	teams: Map<TeamId, string[]>;
+	teams: Map<TeamId, string[]>
 
 	@Type(() => HandState, {
 		keepDiscriminatorProperty: true,
@@ -30,21 +37,27 @@ export class GameState {
 			property: 'state',
 			subTypes: [
 				{ value: InProgressHandState, name: HandStage.HandInProgress },
-				{ value: TableTrumpSelectionHandState, name: HandStage.TableTrumpSelection },
-				{ value: FreeTrumpSelectionHandState, name: HandStage.FreeTrumpSelection }
-			]
-		}
+				{
+					value: TableTrumpSelectionHandState,
+					name: HandStage.TableTrumpSelection,
+				},
+				{
+					value: FreeTrumpSelectionHandState,
+					name: HandStage.FreeTrumpSelection,
+				},
+			],
+		},
 	})
 	@IsOptional()
 	@ValidateNested()
-	hand?: HandStateType;
+	hand?: HandStateType
 
 	@IsEnum(GameStage)
-	gameState: GameStage;
+	gameState: GameStage
 
 	@Type(() => Map<TeamId, number>)
 	@Transform(enumKeyMap)
-	scores: Map<TeamId, number>;
+	scores: Map<TeamId, number>
 
 	constructor(
 		roomId: string,
@@ -52,12 +65,13 @@ export class GameState {
 		teams: Map<TeamId, string[]>,
 		gameState: GameStage,
 		scores: Map<TeamId, number>,
-		hand?: HandStateType) {
-		this.roomId = roomId;
-		this.players = players;
-		this.teams = teams;
-		this.hand = hand;
-		this.gameState = gameState;
-		this.scores = scores;
+		hand?: HandStateType
+	) {
+		this.roomId = roomId
+		this.players = players
+		this.teams = teams
+		this.hand = hand
+		this.gameState = gameState
+		this.scores = scores
 	}
 }

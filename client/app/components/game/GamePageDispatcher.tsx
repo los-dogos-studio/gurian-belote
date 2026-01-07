@@ -1,15 +1,15 @@
-import { GameStage } from "~/client/state/game-state";
-import { useGameState } from "./GameContext";
-import GameOver from "./page/GameOver";
-import InGame from "./page/InGame";
-import Lobby from './page/Lobby';
-import TeamSelection from "./page/TeamSelection";
+import { GameStage } from '~/client/state/game-state'
+import { useGameState } from './GameContext'
+import GameOver from './page/GameOver'
+import InGame from './page/InGame'
+import Lobby from './page/Lobby'
+import TeamSelection from './page/TeamSelection'
 
 export const GamePageDispatcher = () => {
-	const { gameState } = useGameState();
+	const { gameState } = useGameState()
 
 	if (!gameState || !gameState.gameState) {
-		return <Lobby />;
+		return <Lobby />
 	}
 
 	switch (gameState.gameState.gameState) {
@@ -20,8 +20,8 @@ export const GamePageDispatcher = () => {
 		case GameStage.GameFinished:
 			return <GameOver />
 		default:
-			return <div>Unknown game stage</div>;
+			return <div>Unknown game stage</div>
 	}
 }
 
-export default GamePageDispatcher;
+export default GamePageDispatcher

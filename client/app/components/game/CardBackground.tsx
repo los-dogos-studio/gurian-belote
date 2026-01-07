@@ -1,7 +1,7 @@
 type CardBackgroundProps = {
-	children: React.ReactNode;
-	className?: string;
-};
+	children: React.ReactNode
+	className?: string
+}
 
 const CardBackground = ({ children, className = '' }: CardBackgroundProps) => {
 	return (
@@ -10,7 +10,7 @@ const CardBackground = ({ children, className = '' }: CardBackgroundProps) => {
 		>
 			{children}
 		</div>
-	);
-};
+	)
+}
 
-export default CardBackground;
+export default CardBackground

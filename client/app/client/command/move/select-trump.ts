@@ -1,12 +1,12 @@
-import type { Suit } from "~/client/card";
+import type { Suit } from '~/client/card'
 
 export class SelectTrumpMove {
-	readonly command: string = "selectTrump";
-	suit: Suit | null;
+	readonly command: string = 'selectTrump'
+	suit: Suit | null
 
 	constructor(suit: Suit | null) {
-		this.suit = suit;
+		this.suit = suit
 	}
 }
 
-export default SelectTrumpMove;
+export default SelectTrumpMove

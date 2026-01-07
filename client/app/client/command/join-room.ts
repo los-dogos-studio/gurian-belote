@@ -1,10 +1,10 @@
 class JoinRoomCommand {
-	readonly command: string = 'joinRoom';
-	roomId: string;
+	readonly command: string = 'joinRoom'
+	roomId: string
 
 	constructor(roomId: string) {
-		this.roomId = roomId;
+		this.roomId = roomId
 	}
 }
 
-export default JoinRoomCommand;
+export default JoinRoomCommand

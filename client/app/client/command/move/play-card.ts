@@ -1,12 +1,12 @@
-import type { Card } from "~/client/card";
+import type { Card } from '~/client/card'
 
 export class PlayCardMove {
-	readonly command: string = "playCard";
-	card: Card;
+	readonly command: string = 'playCard'
+	card: Card
 
 	constructor(card: Card) {
-		this.card = card;
+		this.card = card
 	}
 }
 
-export default PlayCardMove;
+export default PlayCardMove
