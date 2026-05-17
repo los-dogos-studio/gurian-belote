@@ -1,4 +1,8 @@
-import { plainToInstance, type TransformFnParams } from 'class-transformer'
+import {
+	plainToInstance,
+	type TransformFnParams,
+	type ClassConstructor,
+} from 'class-transformer'
 
 export const enumKeyMap = <T, U>(value: TransformFnParams) => {
 	const map = new Map<T, U>()
@@ -14,7 +18,7 @@ export const enumKeyMap = <T, U>(value: TransformFnParams) => {
 }
 
 export const enumKeyMapToClassValue =
-	<T, U>(type: new (...args: unknown[]) => U) =>
+	<T, U>(type: ClassConstructor<U>) =>
 	(value: TransformFnParams) => {
 		const map = new Map<T, U>()
 		value.value.forEach((v: U, k: string) => {
