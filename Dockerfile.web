@@ -1,0 +1,16 @@
+FROM oven/bun:1-alpine AS deps-env
+WORKDIR /app
+COPY ./client/package.json ./client/bun.lock /app/
+COPY ./client/lib/package.json /app/lib/
+COPY ./client/web/package.json /app/web/
+RUN bun install --frozen-lockfile
+
+FROM oven/bun:1-alpine AS build-env
+WORKDIR /app
+COPY ./client /app/
+COPY --from=deps-env /app/node_modules /app/node_modules
+RUN cd /app/web && bun run build
+
+FROM nginx:alpine
+COPY --from=build-env /app/web/dist /usr/share/nginx/html
+EXPOSE 80

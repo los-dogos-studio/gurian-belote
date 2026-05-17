@@ -1,3 +1,6 @@
 # Ignore artifacts:
-build
-coverage
+build/
+dist/
+coverage/
+node_modules/
+.vite/

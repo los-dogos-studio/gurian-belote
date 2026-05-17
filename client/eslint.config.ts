@@ -8,10 +8,18 @@ import eslintConfigPrettier from 'eslint-config-prettier/flat'
 
 export default defineConfig([
 	{
+		ignores: [
+			'**/node_modules/**',
+			'**/dist/**',
+			'**/build/**',
+			'**/.vite/**',
+		],
+	},
+	{
 		files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 		plugins: { js },
 		extends: ['js/recommended'],
-		languageOptions: { globals: globals.browser },
+		languageOptions: { globals: { ...globals.browser, ...globals.node } },
 	},
 	tseslint.configs.recommended,
 	{
