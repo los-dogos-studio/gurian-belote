@@ -89,7 +89,10 @@ export class GameClient {
 				}
 				const content = JSON.parse(event.data)
 				if (content.sessionId) {
-					void this.sessionManager.saveSession(content.sessionId, userId)
+					void this.sessionManager.saveSession(
+						content.sessionId,
+						userId
+					)
 					return
 				}
 				const message = plainToInstance(State, content as State)
