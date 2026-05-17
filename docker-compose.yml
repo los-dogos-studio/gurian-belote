@@ -10,7 +10,7 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: Dockerfile.client
+      dockerfile: Dockerfile.web
     ports:
       - "80:80"
       - "443:443"
