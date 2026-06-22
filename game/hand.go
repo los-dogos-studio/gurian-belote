@@ -2,6 +2,8 @@ package game
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 )
 
 type Hand struct {
@@ -15,6 +17,9 @@ type Hand struct {
 	TableTrumpCard            Card
 	TableTrumpSelectionStatus map[PlayerId]bool
 	FreeTrumpSelectionStatus  map[PlayerId]bool
+
+	PlayerDeclarations map[PlayerId][]Declaration
+	DeclarationWinner  *TeamId
 
 	Trump Suit
 
@@ -45,6 +50,8 @@ func NewHand(startingPlayer PlayerId, dealer Dealer) *Hand {
 		TableTrumpCard:            Card{},
 		TableTrumpSelectionStatus: map[PlayerId]bool{},
 		FreeTrumpSelectionStatus:  map[PlayerId]bool{},
+		PlayerDeclarations:        map[PlayerId][]Declaration{},
+		DeclarationWinner:         nil,
 		Trump:                     Spades,
 		dealer:                    dealer,
 	}
@@ -75,11 +82,28 @@ func (h *Hand) PlayCard(player PlayerId, card Card) error {
 		return fmt.Errorf("hand is not in progress")
 	}
 
+	playerCards := slices.Collect(maps.Keys(h.PlayerCards[player]))
+
 	if err := h.CurrentTrick.PlayCard(player, card, h.PlayerCards[player]); err != nil {
 		return err
 	}
 
+	if h.PreviousTrick == nil {
+		for _, d := range FindPreHandDeclarations(playerCards) {
+			h.PlayerDeclarations[player] = append(h.PlayerDeclarations[player], d)
+		}
+	}
+
+	if card.Suit == h.Trump && (card.Rank == King || card.Rank == Queen) && HasBelote(playerCards, h.Trump) {
+		h.PlayerDeclarations[player] = append(h.PlayerDeclarations[player], Belote{})
+		h.Totals[player.GetTeam()] += Belote{}.Points()
+	}
+
 	if h.CurrentTrick.IsFinished() {
+		if h.PreviousTrick == nil {
+			h.scorePreHandDeclarations()
+		}
+
 		trickResult, err := h.CurrentTrick.GetTrickResult()
 		if err != nil {
 			panic(err)
@@ -266,6 +290,60 @@ func makePlayerCards() map[PlayerId]map[Card]bool {
 		playerCards[player] = make(map[Card]bool, NUM_CARDS_PER_PLAYER)
 	}
 	return playerCards
+}
+
+func (h *Hand) scorePreHandDeclarations() {
+	bestByTeam := map[TeamId]*PreHandDeclaration{}
+
+	for player, decls := range h.PlayerDeclarations {
+		team := player.GetTeam()
+		for _, decl := range decls {
+			prehand, ok := decl.(PreHandDeclaration)
+			if !ok {
+				continue
+			}
+			if best := bestByTeam[team]; best == nil || CompareDeclarations(prehand, *best, h.Trump) > 0 {
+				r := prehand
+				bestByTeam[team] = &r
+			}
+		}
+	}
+
+	best1, best2 := bestByTeam[Team1], bestByTeam[Team2]
+
+	var winner *TeamId
+	switch {
+	case best1 != nil && best2 == nil:
+		t := Team1
+		winner = &t
+	case best1 == nil && best2 != nil:
+		t := Team2
+		winner = &t
+	case best1 != nil && best2 != nil:
+		if cmp := CompareDeclarations(*best1, *best2, h.Trump); cmp > 0 {
+			t := Team1
+			winner = &t
+		} else if cmp < 0 {
+			t := Team2
+			winner = &t
+		}
+		// TODO: handle tie
+	}
+
+	h.DeclarationWinner = winner
+
+	if winner != nil {
+		for player, decls := range h.PlayerDeclarations {
+			if player.GetTeam() != *winner {
+				continue
+			}
+			for _, decl := range decls {
+				if _, ok := decl.(Belote); !ok {
+					h.Totals[*winner] += decl.Points()
+				}
+			}
+		}
+	}
 }
 
 func (h *Hand) getLastPlayer() PlayerId {
