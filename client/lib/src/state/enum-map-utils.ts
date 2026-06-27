@@ -31,3 +31,21 @@ export const enumKeyMapToClassValue =
 		})
 		return map
 	}
+
+export const enumKeyMapToClassArrayValue =
+	<T, U>(type: ClassConstructor<U>) =>
+	(value: TransformFnParams) => {
+		const map = new Map<T, U[]>()
+		value.value.forEach((v: U[], k: string) => {
+			const intKey = parseInt(k, 10)
+			if (!isNaN(intKey)) {
+				map.set(
+					intKey as unknown as T,
+					v.map((item) => plainToInstance(type, item))
+				)
+			} else {
+				console.warn(`Invalid key: ${k}`)
+			}
+		})
+		return map
+	}

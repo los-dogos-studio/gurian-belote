@@ -1,11 +1,12 @@
 import { Card, Suit } from '../card'
 import { getNextPlayerId, PlayerId } from '../player-id'
-import type { TeamId } from '../team-id'
+import { TeamId } from '../team-id'
 import 'reflect-metadata'
-import { enumKeyMap } from './enum-map-utils'
+import { enumKeyMap, enumKeyMapToClassArrayValue } from './enum-map-utils'
 import { Transform, Type } from 'class-transformer'
 import { IsEnum, IsOptional, ValidateNested } from 'class-validator'
 import { Trick } from './trick'
+import { Declaration } from './declaration'
 
 export enum HandStage {
 	TableTrumpSelection = 'TableTrumpSelection',
@@ -124,16 +125,28 @@ export class InProgressHandState extends HandState {
 	@Transform(enumKeyMap)
 	totals: Map<TeamId, number>
 
+	@Type(() => Map<PlayerId, Declaration[]>)
+	@Transform(enumKeyMapToClassArrayValue(Declaration))
+	playerDeclarations: Map<PlayerId, Declaration[]>
+
+	@IsEnum(TeamId)
+	@IsOptional()
+	declarationWinner?: TeamId
+
 	constructor(
 		state: HandStage,
 		trump: Suit,
 		trick: Trick,
-		totals: Map<TeamId, number>
+		totals: Map<TeamId, number>,
+		playerDeclarations: Map<PlayerId, Declaration[]>,
+		declarationWinner?: TeamId
 	) {
 		super(state)
 		this.trump = trump
 		this.trick = trick
 		this.totals = totals
+		this.playerDeclarations = playerDeclarations
+		this.declarationWinner = declarationWinner
 	}
 
 	getCurrentTurn(): PlayerId {
