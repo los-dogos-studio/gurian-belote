@@ -7,6 +7,7 @@ import { TeamId } from '@gurian-belote/lib'
 import PlayerIcon from './PlayerIcon'
 import TrumpDisplay from './TrumpDisplay'
 import PlayArea from './PlayArea'
+import HandStatePanel from './HandStatePanel'
 
 export const InGame = () => {
 	const { gameState } = useGameState()
@@ -39,7 +40,13 @@ export const InGame = () => {
 
 	return (
 		<div className="h-full w-full relative gap-4 p-4 text-white">
-			<div className="absolute top-2 right-2 p-3 flex gap-4">
+			<div className="absolute top-2 left-2 p-3 z-10">
+				{gameState.gameState.hand &&
+					gameState.gameState.hand.state ===
+						HandStage.HandInProgress && <HandStatePanel />}
+			</div>
+
+			<div className="absolute top-2 right-2 p-3 flex gap-4 z-10">
 				{gameState.gameState.hand &&
 					gameState.gameState.hand.state ===
 						HandStage.HandInProgress && (
