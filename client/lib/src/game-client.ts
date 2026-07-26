@@ -151,12 +151,12 @@ export class GameClient {
 		this.ws.send(JSON.stringify(command))
 	}
 
-	public playCard(card: Card): void {
+	public playCard(card: Card, skipDeclarations: boolean = false): void {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
 			throw new Error('WebSocket is not connected.')
 		}
 
-		const move = new PlayCardMove(card)
+		const move = new PlayCardMove(card, skipDeclarations)
 		const command = new PlayTurnCommand(move)
 		this.ws.send(JSON.stringify(command))
 	}
