@@ -77,7 +77,7 @@ func NewHand(startingPlayer PlayerId, dealer Dealer) *Hand {
 	return hand
 }
 
-func (h *Hand) PlayCard(player PlayerId, card Card) error {
+func (h *Hand) PlayCard(player PlayerId, card Card, skipDeclarations bool) error {
 	if h.State != HandInProgress {
 		return fmt.Errorf("hand is not in progress")
 	}
@@ -88,15 +88,17 @@ func (h *Hand) PlayCard(player PlayerId, card Card) error {
 		return err
 	}
 
-	if h.PreviousTrick == nil {
-		for _, d := range FindPreHandDeclarations(playerCards) {
-			h.PlayerDeclarations[player] = append(h.PlayerDeclarations[player], d)
+	if !skipDeclarations {
+		if h.PreviousTrick == nil {
+			for _, d := range FindPreHandDeclarations(playerCards) {
+				h.PlayerDeclarations[player] = append(h.PlayerDeclarations[player], d)
+			}
 		}
-	}
 
-	if card.Suit == h.Trump && (card.Rank == King || card.Rank == Queen) && HasBelote(playerCards, h.Trump) {
-		h.PlayerDeclarations[player] = append(h.PlayerDeclarations[player], Belote{})
-		h.Totals[player.GetTeam()] += Belote{}.Points()
+		if card.Suit == h.Trump && (card.Rank == King || card.Rank == Queen) && HasBelote(playerCards, h.Trump) {
+			h.PlayerDeclarations[player] = append(h.PlayerDeclarations[player], Belote{})
+			h.Totals[player.GetTeam()] += Belote{}.Points()
+		}
 	}
 
 	if h.CurrentTrick.IsFinished() {
