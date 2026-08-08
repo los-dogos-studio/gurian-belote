@@ -295,41 +295,38 @@ func makePlayerCards() map[PlayerId]map[Card]bool {
 }
 
 func (h *Hand) scorePreHandDeclarations() {
-	bestByTeam := map[TeamId]*PreHandDeclaration{}
+	bestByPlayer := map[PlayerId]*PreHandDeclaration{}
 
 	for player, decls := range h.PlayerDeclarations {
-		team := player.GetTeam()
 		for _, decl := range decls {
 			prehand, ok := decl.(PreHandDeclaration)
 			if !ok {
 				continue
 			}
-			if best := bestByTeam[team]; best == nil || CompareDeclarations(prehand, *best, h.Trump) > 0 {
+			if best := bestByPlayer[player]; best == nil || CompareDeclarations(prehand, *best, h.Trump) > 0 {
 				r := prehand
-				bestByTeam[team] = &r
+				bestByPlayer[player] = &r
 			}
 		}
 	}
 
-	best1, best2 := bestByTeam[Team1], bestByTeam[Team2]
+	var winnerPlayer *PlayerId
+	playerId := h.StartingPlayer
+	for i := 0; i < NUM_PLAYERS; i++ {
+		best := bestByPlayer[playerId]
+		if best != nil {
+			if winnerPlayer == nil || CompareDeclarations(*best, *bestByPlayer[*winnerPlayer], h.Trump) > 0 {
+				p := playerId
+				winnerPlayer = &p
+			}
+		}
+		playerId = playerId.GetNextPlayerId()
+	}
 
 	var winner *TeamId
-	switch {
-	case best1 != nil && best2 == nil:
-		t := Team1
+	if winnerPlayer != nil {
+		t := winnerPlayer.GetTeam()
 		winner = &t
-	case best1 == nil && best2 != nil:
-		t := Team2
-		winner = &t
-	case best1 != nil && best2 != nil:
-		if cmp := CompareDeclarations(*best1, *best2, h.Trump); cmp > 0 {
-			t := Team1
-			winner = &t
-		} else if cmp < 0 {
-			t := Team2
-			winner = &t
-		}
-		// TODO: handle tie
 	}
 
 	h.DeclarationWinner = winner
