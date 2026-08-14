@@ -50,12 +50,20 @@ func (d *FreeTrumpSelectionHandDump) GetStartingPlayer() game.PlayerId {
 	return d.StartingPlayer
 }
 
+type DeclarationDump struct {
+	Type        string     `json:"type"`
+	HighestCard *game.Card `json:"highestCard,omitempty"`
+	Points      int        `json:"points"`
+}
+
 type InProgressHandDump struct {
-	State         game.HandState      `json:"state"`
-	Trump         game.Suit           `json:"trump"`
-	Trick         TrickDump           `json:"trick"`
-	PreviousTrick *TrickDump          `json:"previousTrick,omitempty"`
-	Totals        map[game.TeamId]int `json:"totals"`
+	State              game.HandState                      `json:"state"`
+	Trump              game.Suit                           `json:"trump"`
+	Trick              TrickDump                           `json:"trick"`
+	PreviousTrick      *TrickDump                          `json:"previousTrick,omitempty"`
+	Totals             map[game.TeamId]int                 `json:"totals"`
+	PlayerDeclarations map[game.PlayerId][]DeclarationDump `json:"playerDeclarations"`
+	DeclarationWinner  *game.TeamId                        `json:"declarationWinner,omitempty"`
 }
 
 func (d *InProgressHandDump) GetState() game.HandState {
@@ -222,11 +230,53 @@ func dumpInProgressHand(hand *game.Hand) *InProgressHandDump {
 	}
 
 	return &InProgressHandDump{
-		State:         hand.GetState(),
-		Trump:         hand.GetTrump(),
-		Trick:         *dumpTrick(trick),
-		PreviousTrick: dumpTrick(hand.PreviousTrick),
-		Totals:        hand.Totals,
+		State:              hand.GetState(),
+		Trump:              hand.GetTrump(),
+		Trick:              *dumpTrick(trick),
+		PreviousTrick:      dumpTrick(hand.PreviousTrick),
+		Totals:             hand.Totals,
+		PlayerDeclarations: dumpPlayerDeclarations(hand.PlayerDeclarations),
+		DeclarationWinner:  hand.DeclarationWinner,
+	}
+}
+
+func dumpPlayerDeclarations(playerDeclarations map[game.PlayerId][]game.Declaration) map[game.PlayerId][]DeclarationDump {
+	result := make(map[game.PlayerId][]DeclarationDump, len(playerDeclarations))
+	for player, decls := range playerDeclarations {
+		dumps := make([]DeclarationDump, 0, len(decls))
+		for _, d := range decls {
+			dumps = append(dumps, dumpDeclaration(d))
+		}
+		result[player] = dumps
+	}
+	return result
+}
+
+var preHandDeclarationTypeNames = map[game.PreHandDeclarationType]string{
+	game.Tierce:     "Tierce",
+	game.Quarte:     "Quarte",
+	game.Quinte:     "Quinte",
+	game.Carre:      "Carre",
+	game.NinesCarre: "NinesCarre",
+	game.JacksCarre: "JacksCarre",
+}
+
+func dumpDeclaration(d game.Declaration) DeclarationDump {
+	switch v := d.(type) {
+	case game.PreHandDeclaration:
+		card := v.HighestCard
+		return DeclarationDump{
+			Type:        preHandDeclarationTypeNames[v.Type],
+			HighestCard: &card,
+			Points:      v.Points(),
+		}
+	case game.Belote:
+		return DeclarationDump{
+			Type:   "Belote",
+			Points: v.Points(),
+		}
+	default:
+		return DeclarationDump{Type: "Unknown", Points: d.Points()}
 	}
 }
 

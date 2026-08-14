@@ -64,10 +64,10 @@ func (t *Trick) GetTrickResult() (*TrickResult, error) {
 
 		bestCard := t.Cards[bestCardOwner]
 		if bestCard.Suit == t.Trump {
-			if card.Suit == t.Trump && card.Rank.getTrumpRankOrderIndex() > bestCard.Rank.getTrumpRankOrderIndex() {
+			if card.Suit == t.Trump && card.Rank.TrickOrder(true) > bestCard.Rank.TrickOrder(true) {
 				bestCardOwner = player
 			}
-		} else if card.Suit == t.Trump || (card.Suit == bestCard.Suit && card.Rank.getNonTrumpRankOrderIndex() > bestCard.Rank.getNonTrumpRankOrderIndex()) {
+		} else if card.Suit == t.Trump || (card.Suit == bestCard.Suit && card.Rank.TrickOrder(false) > bestCard.Rank.TrickOrder(false)) {
 			bestCardOwner = player
 		}
 	}
@@ -145,8 +145,8 @@ func (t *Trick) validateHigherTrumpRule(card Card, playerCards map[Card]bool) er
 		return nil
 	}
 
-	if playersHighestTrump.getTrumpRankOrderIndex() > highestTrumpInTrick.getTrumpRankOrderIndex() &&
-		card.Rank.getTrumpRankOrderIndex() < highestTrumpInTrick.getTrumpRankOrderIndex() {
+	if playersHighestTrump.TrickOrder(true) > highestTrumpInTrick.TrickOrder(true) &&
+		card.Rank.TrickOrder(true) < highestTrumpInTrick.TrickOrder(true) {
 		return ErrMustPlayHigherRankTrumpCard
 	}
 
@@ -174,7 +174,7 @@ func (t *Trick) getHighestTrumpInTrick() *Rank {
 			continue
 		}
 
-		if highestRank == nil || card.Rank.getTrumpRankOrderIndex() > highestRank.getTrumpRankOrderIndex() {
+		if highestRank == nil || card.Rank.TrickOrder(true) > highestRank.TrickOrder(true) {
 			highestRank = &card.Rank
 		}
 	}
@@ -190,7 +190,7 @@ func getPlayersHighestTrump(playerCards map[Card]bool, trump Suit) *Rank {
 			continue
 		}
 
-		if highestRank == nil || card.Rank.getTrumpRankOrderIndex() > highestRank.getTrumpRankOrderIndex() {
+		if highestRank == nil || card.Rank.TrickOrder(true) > highestRank.TrickOrder(true) {
 			highestRank = &card.Rank
 		}
 	}

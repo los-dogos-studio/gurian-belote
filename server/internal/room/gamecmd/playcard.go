@@ -7,7 +7,8 @@ import (
 )
 
 type PlayCardCommand struct {
-	Card game.Card
+	Card             game.Card
+	SkipDeclarations bool
 }
 
 const PlayCardCmdType = "playCard"
@@ -24,5 +25,5 @@ func newPlayCardCommand(cmdBytes []byte) (*PlayCardCommand, error) {
 }
 
 func (c *PlayCardCommand) PlayTurnAs(playerId game.PlayerId, game *game.BeloteGame) error {
-	return game.PlayCard(playerId, c.Card)
+	return game.PlayCard(playerId, c.Card, c.SkipDeclarations)
 }

@@ -93,12 +93,12 @@ func (gm *BeloteGame) Start() {
 	gm.setupHand()
 }
 
-func (gm *BeloteGame) PlayCard(player PlayerId, card Card) error {
+func (gm *BeloteGame) PlayCard(player PlayerId, card Card, skipDeclarations bool) error {
 	if gm.state != GameInProgress {
 		return fmt.Errorf("game is not in progress")
 	}
 
-	err := gm.currentHand.PlayCard(player, card)
+	err := gm.currentHand.PlayCard(player, card, skipDeclarations)
 	if err != nil {
 		return err
 	}
