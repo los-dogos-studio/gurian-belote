@@ -25,8 +25,8 @@ const SkipDeclarationsToggle = ({
 					? 'opacity-40 cursor-not-allowed'
 					: 'cursor-pointer hover:scale-105',
 				active
-				? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow shadow-amber-400/40 hover:shadow-md hover:shadow-amber-400/60 hover:border-amber-300'
-				: 'bg-gray-700/60 border-gray-500 text-gray-400 hover:border-gray-400 hover:text-gray-300',
+					? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow shadow-amber-400/40 hover:shadow-md hover:shadow-amber-400/60 hover:border-amber-300'
+					: 'bg-gray-700/60 border-gray-500 text-gray-400 hover:border-gray-400 hover:text-gray-300',
 			].join(' ')}
 		>
 			<span
