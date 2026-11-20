@@ -117,6 +117,9 @@ export class InProgressHandState extends HandState {
 	@IsEnum(Suit)
 	trump: Suit
 
+	@IsEnum(PlayerId)
+	declarer: PlayerId
+
 	@Type(() => Trick)
 	@ValidateNested()
 	trick: Trick
@@ -136,6 +139,7 @@ export class InProgressHandState extends HandState {
 	constructor(
 		state: HandStage,
 		trump: Suit,
+		declarer: PlayerId,
 		trick: Trick,
 		totals: Map<TeamId, number>,
 		playerDeclarations: Map<PlayerId, Declaration[]>,
@@ -143,6 +147,7 @@ export class InProgressHandState extends HandState {
 	) {
 		super(state)
 		this.trump = trump
+		this.declarer = declarer
 		this.trick = trick
 		this.totals = totals
 		this.playerDeclarations = playerDeclarations
