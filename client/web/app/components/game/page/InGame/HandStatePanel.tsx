@@ -105,12 +105,27 @@ const TeamDeclarationList = ({
 	)
 }
 
+interface DeclarerLabelProps {
+	declarerName?: string
+}
+
+const DeclarerLabel = ({ declarerName }: DeclarerLabelProps) => (
+	<span
+		title={declarerName ? `Trump chosen by ${declarerName}` : undefined}
+		className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300"
+	>
+		Declarers
+	</span>
+)
+
 interface TeamHandStateProps {
 	name: string
 	score: number
 	declarations: Map<PlayerId, Declaration[]>
 	players: Map<PlayerId, string>
 	isLosingTeam?: boolean
+	isDeclarerTeam?: boolean
+	declarerName?: string
 }
 
 const TeamHandState = ({
@@ -119,11 +134,16 @@ const TeamHandState = ({
 	declarations,
 	players,
 	isLosingTeam = false,
+	isDeclarerTeam = false,
+	declarerName,
 }: TeamHandStateProps) => {
 	return (
 		<div>
-			<h3 className="font-semibold mb-1 border-b border-white/20 pb-1 flex justify-between">
+			<h3 className="font-semibold mb-1 border-b border-white/20 pb-1 flex justify-between items-center">
 				<span>{name}</span>
+				{isDeclarerTeam && (
+					<DeclarerLabel declarerName={declarerName} />
+				)}
 			</h3>
 			<p className="text-sm">Points: {score}</p>
 			<TeamDeclarationList
@@ -149,8 +169,12 @@ const HandStatePanel = () => {
 	}
 
 	const handState = gameState.gameState.hand as InProgressHandState
-	const { totals, playerDeclarations, declarationWinner } = handState
+	const { totals, playerDeclarations, declarationWinner, declarer } =
+		handState
 	const { players } = gameState.gameState
+
+	const declarerTeam = getTeamId(declarer)
+	const declarerName = players.get(declarer) ?? `Player ${declarer}`
 
 	const getDeclarationsForTeam = (
 		teamId: TeamId
@@ -174,6 +198,8 @@ const HandStatePanel = () => {
 					declarations={getDeclarationsForTeam(TeamId.Team1)}
 					players={players}
 					isLosingTeam={declarationWinner === TeamId.Team2}
+					isDeclarerTeam={declarerTeam === TeamId.Team1}
+					declarerName={declarerName}
 				/>
 				<TeamHandState
 					name="Team 2"
@@ -181,6 +207,8 @@ const HandStatePanel = () => {
 					declarations={getDeclarationsForTeam(TeamId.Team2)}
 					players={players}
 					isLosingTeam={declarationWinner === TeamId.Team1}
+					isDeclarerTeam={declarerTeam === TeamId.Team2}
+					declarerName={declarerName}
 				/>
 			</div>
 		</Panel>

@@ -21,7 +21,8 @@ type Hand struct {
 	PlayerDeclarations map[PlayerId][]Declaration
 	DeclarationWinner  *TeamId
 
-	Trump Suit
+	Trump    Suit
+	Declarer PlayerId
 
 	dealer Dealer
 }
@@ -53,6 +54,7 @@ func NewHand(startingPlayer PlayerId, dealer Dealer) *Hand {
 		PlayerDeclarations:        map[PlayerId][]Declaration{},
 		DeclarationWinner:         nil,
 		Trump:                     Spades,
+		Declarer:                  NoPlayerId,
 		dealer:                    dealer,
 	}
 
@@ -66,8 +68,9 @@ func NewHand(startingPlayer PlayerId, dealer Dealer) *Hand {
 	}
 
 	if tableTrumpCard.Rank == Jack {
-		hand.PlayerCards[hand.getLastPlayer()][tableTrumpCard] = true
-		hand.handleTrumpSelected(tableTrumpCard.Suit)
+		lastPlayer := hand.getLastPlayer()
+		hand.PlayerCards[lastPlayer][tableTrumpCard] = true
+		hand.handleTrumpSelected(lastPlayer, tableTrumpCard.Suit)
 		return hand
 	}
 
@@ -127,7 +130,7 @@ func (h *Hand) AcceptTableTrump(player PlayerId, accept bool) error {
 
 	if accept {
 		h.PlayerCards[player][h.TableTrumpCard] = true
-		h.handleTrumpSelected(h.TableTrumpCard.Suit)
+		h.handleTrumpSelected(player, h.TableTrumpCard.Suit)
 		return nil
 	}
 
@@ -162,7 +165,7 @@ func (h *Hand) SelectTrump(player PlayerId, suit *Suit) error {
 	}
 
 	h.PlayerCards[player][h.TableTrumpCard] = true
-	h.handleTrumpSelected(*suit)
+	h.handleTrumpSelected(player, *suit)
 	return nil
 }
 
@@ -190,6 +193,10 @@ func (h *Hand) GetState() HandState {
 
 func (h *Hand) GetTrump() Suit {
 	return h.Trump
+}
+
+func (h *Hand) GetDeclarer() PlayerId {
+	return h.Declarer
 }
 
 func (h *Hand) GetTableTrump() Card {
@@ -227,12 +234,23 @@ func (h *Hand) handleTrickResult(trickResult *TrickResult) {
 	h.Totals[trickResult.WinnerPlayer.GetTeam()] += trickResult.Points
 
 	if h.checkEndCondition() {
+		h.applyDeclarerFailureRule()
 		h.State = HandFinished
 		return
 	}
 
 	h.PreviousTrick = h.CurrentTrick
 	h.CurrentTrick = NewTrick(trickResult.WinnerPlayer, h.Trump)
+}
+
+func (h *Hand) applyDeclarerFailureRule() {
+	declarerTeam := h.Declarer.GetTeam()
+	opponentTeam := declarerTeam.GetOpponentTeam()
+
+	if h.Totals[declarerTeam] <= h.Totals[opponentTeam] {
+		h.Totals[opponentTeam] += h.Totals[declarerTeam]
+		h.Totals[declarerTeam] = -DECLARER_FAILURE_PENALTY
+	}
 }
 
 func (h *Hand) checkEndCondition() bool {
@@ -267,7 +285,8 @@ func (h *Hand) checkIsTrumpSelectionTurnFor(player PlayerId, selections map[Play
 	return nil
 }
 
-func (h *Hand) handleTrumpSelected(trump Suit) {
+func (h *Hand) handleTrumpSelected(declarer PlayerId, trump Suit) {
+	h.Declarer = declarer
 	h.Trump = trump
 	h.State = HandInProgress
 	h.CurrentTrick = NewTrick(h.StartingPlayer, h.Trump)
