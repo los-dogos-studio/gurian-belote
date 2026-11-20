@@ -59,6 +59,7 @@ type DeclarationDump struct {
 type InProgressHandDump struct {
 	State              game.HandState                      `json:"state"`
 	Trump              game.Suit                           `json:"trump"`
+	Declarer           game.PlayerId                       `json:"declarer"`
 	Trick              TrickDump                           `json:"trick"`
 	PreviousTrick      *TrickDump                          `json:"previousTrick,omitempty"`
 	Totals             map[game.TeamId]int                 `json:"totals"`
@@ -232,6 +233,7 @@ func dumpInProgressHand(hand *game.Hand) *InProgressHandDump {
 	return &InProgressHandDump{
 		State:              hand.GetState(),
 		Trump:              hand.GetTrump(),
+		Declarer:           hand.GetDeclarer(),
 		Trick:              *dumpTrick(trick),
 		PreviousTrick:      dumpTrick(hand.PreviousTrick),
 		Totals:             hand.Totals,
