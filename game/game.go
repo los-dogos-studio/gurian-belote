@@ -14,10 +14,11 @@ type BeloteGame struct {
 }
 
 const (
-	NUM_PLAYERS            = 4
-	NUM_CARDS_PER_PLAYER   = 8
-	NUM_CARDS_BEFORE_TRUMP = 5
-	TARGET_SCORE           = 1000
+	NUM_PLAYERS              = 4
+	NUM_CARDS_PER_PLAYER     = 8
+	NUM_CARDS_BEFORE_TRUMP   = 5
+	TARGET_SCORE             = 1000
+	DECLARER_FAILURE_PENALTY = 50
 )
 
 type GameState string
@@ -45,6 +46,13 @@ const (
 	Team1
 	Team2
 )
+
+func (t TeamId) GetOpponentTeam() TeamId {
+	if t == Team1 {
+		return Team2
+	}
+	return Team1
+}
 
 func (p PlayerId) GetTeam() TeamId {
 	if p == Player1 || p == Player3 {

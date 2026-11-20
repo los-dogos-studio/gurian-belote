@@ -234,12 +234,23 @@ func (h *Hand) handleTrickResult(trickResult *TrickResult) {
 	h.Totals[trickResult.WinnerPlayer.GetTeam()] += trickResult.Points
 
 	if h.checkEndCondition() {
+		h.applyDeclarerFailureRule()
 		h.State = HandFinished
 		return
 	}
 
 	h.PreviousTrick = h.CurrentTrick
 	h.CurrentTrick = NewTrick(trickResult.WinnerPlayer, h.Trump)
+}
+
+func (h *Hand) applyDeclarerFailureRule() {
+	declarerTeam := h.Declarer.GetTeam()
+	opponentTeam := declarerTeam.GetOpponentTeam()
+
+	if h.Totals[declarerTeam] <= h.Totals[opponentTeam] {
+		h.Totals[opponentTeam] += h.Totals[declarerTeam]
+		h.Totals[declarerTeam] = -DECLARER_FAILURE_PENALTY
+	}
 }
 
 func (h *Hand) checkEndCondition() bool {
